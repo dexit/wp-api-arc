@@ -43,9 +43,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleTerminal,
   onOpenAI
 }) => {
+  const [isCollapsed, setIsCollapsed] = React.useState(false);
   
   const SectionHeader = ({ label }: { label: string }) => (
-    <div className="px-4 mt-6 mb-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{label}</div>
+    <div className={`px-4 mt-6 mb-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest ${isCollapsed ? 'hidden' : 'block'}`}>{label}</div>
   );
 
   const NavItem = ({ 
@@ -63,41 +64,58 @@ export const Sidebar: React.FC<SidebarProps> = ({
   }) => (
     <button
       onClick={onClick}
-      className={`w-full text-left px-3 py-1.5 mx-2 rounded-md flex items-center gap-3 transition-all group ${
+      title={label}
+      className={`text-left py-1.5 mx-2 rounded-md flex items-center justify-center transition-all group ${
         active 
           ? 'bg-zinc-800 text-white shadow-sm' 
           : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
-      }`}
-      style={{ width: 'calc(100% - 16px)' }}
+      } ${isCollapsed ? 'w-10 px-0' : 'w-[calc(100%-16px)] px-3 gap-3'}`}
     >
-      <Icon size={16} className={`${active ? 'text-indigo-400' : 'text-zinc-500 group-hover:text-zinc-400'}`} />
-      <div className="flex flex-col leading-none">
-        <span className="text-sm font-medium">{label}</span>
-        {subLabel && <span className="text-[10px] text-zinc-500 mt-0.5 font-mono">{subLabel}</span>}
-      </div>
+      <Icon size={16} className={`${active ? 'text-indigo-400' : 'text-zinc-500 group-hover:text-zinc-400 shrink-0'}`} />
+      {!isCollapsed && (
+        <div className="flex flex-col leading-none overflow-hidden text-ellipsis whitespace-nowrap">
+          <span className="text-sm font-medium truncate">{label}</span>
+          {subLabel && <span className="text-[10px] text-zinc-500 mt-0.5 font-mono truncate">{subLabel}</span>}
+        </div>
+      )}
     </button>
   );
 
-  const AddButton = ({ onClick, label }: { onClick: () => void, label: string }) => (
-    <button 
-      onClick={onClick}
-      className="ml-4 mt-1 text-xs text-zinc-500 hover:text-indigo-400 flex items-center gap-1.5 transition-colors px-2 py-1 rounded hover:bg-zinc-900 w-fit"
-    >
-      <Plus size={12} /> {label}
-    </button>
-  );
+  const AddButton = ({ onClick, label }: { onClick: () => void, label: string }) => {
+    if (isCollapsed) return null;
+    return (
+      <button 
+        onClick={onClick}
+        className="ml-4 mt-1 text-xs text-zinc-500 hover:text-indigo-400 flex items-center gap-1.5 transition-colors px-2 py-1 rounded hover:bg-zinc-900 w-fit"
+      >
+        <Plus size={12} /> {label}
+      </button>
+    );
+  };
 
   return (
-    <div className="w-64 bg-[#121214] flex flex-col border-r border-zinc-800 h-full">
+    <div className={`${isCollapsed ? 'w-16' : 'w-64'} bg-[#121214] flex flex-col border-r border-zinc-800 h-full transition-all duration-300 ease-in-out`}>
       {/* Brand Header */}
-      <div className="h-14 flex items-center px-4 border-b border-zinc-800/50">
-        <div className="w-6 h-6 bg-indigo-600 rounded flex items-center justify-center mr-3 shadow-lg shadow-indigo-500/20">
-          <Zap size={14} className="text-white fill-white" />
+      <div className="h-14 flex items-center justify-between px-3 border-b border-zinc-800/50">
+        <div className="flex items-center">
+            <div className={`w-6 h-6 bg-indigo-600 rounded flex items-center justify-center shadow-lg shadow-indigo-500/20 ${isCollapsed ? '' : 'mr-3'}`}>
+            <Zap size={14} className="text-white fill-white" />
+            </div>
+            {!isCollapsed && <span className="font-bold text-sm tracking-wide text-zinc-100 whitespace-nowrap">API Architect</span>}
         </div>
-        <span className="font-bold text-sm tracking-wide text-zinc-100">API Architect</span>
+        {!isCollapsed && (
+            <button onClick={() => setIsCollapsed(true)} className="text-zinc-500 hover:text-white p-1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+        )}
+        {isCollapsed && (
+            <button onClick={() => setIsCollapsed(false)} className="absolute left-14 z-50 bg-zinc-800 text-zinc-400 border border-zinc-700 hover:text-white rounded-r p-1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+        )}
       </div>
 
-      <div className="flex-1 overflow-y-auto py-2 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto py-2 custom-scrollbar overflow-x-hidden">
         
         <SectionHeader label="Core Architecture" />
         <NavItem 
@@ -176,21 +194,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="p-3 border-t border-zinc-800 bg-[#0e0e11] space-y-2">
         <button 
           onClick={onToggleTerminal}
-          className={`w-full py-2 px-3 rounded-md flex items-center gap-2 text-xs font-mono transition-all border ${
+          title={isTerminalOpen ? 'Hide Console' : 'Show Console'}
+          className={`w-full py-2 px-3 rounded-md flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'} text-xs font-mono transition-all border ${
             isTerminalOpen 
               ? 'bg-zinc-800 text-green-400 border-zinc-700' 
               : 'text-zinc-500 border-transparent hover:bg-zinc-800/50'
           }`}
         >
-          <TerminalIcon size={14} /> 
-          <span className="flex-1 text-left">{isTerminalOpen ? 'Hide Console' : 'Show Console'}</span>
+          <TerminalIcon size={14} className="shrink-0" /> 
+          {!isCollapsed && <span className="flex-1 text-left whitespace-nowrap overflow-hidden text-ellipsis">{isTerminalOpen ? 'Hide Console' : 'Show Console'}</span>}
         </button>
         
         <button 
           onClick={onOpenAI}
-          className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-3 rounded-md shadow-lg shadow-indigo-900/20 flex items-center justify-center gap-2 text-xs font-bold tracking-wide transition-all border border-indigo-500/50"
+          title="AI Generate"
+          className={`w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 ${isCollapsed ? 'px-0 justify-center' : 'px-3 justify-center gap-2'} rounded-md shadow-lg shadow-indigo-900/20 flex items-center text-xs font-bold tracking-wide transition-all border border-indigo-500/50`}
         >
-          <Zap size={14} className="fill-white" /> AI GENERATE
+          <Zap size={14} className="fill-white shrink-0" /> 
+          {!isCollapsed && <span className="whitespace-nowrap overflow-hidden text-ellipsis">AI GENERATE</span>}
         </button>
       </div>
     </div>

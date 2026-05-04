@@ -132,6 +132,8 @@ export const EndpointEditor: React.FC<EndpointEditorProps> = ({ endpoint, namesp
     });
   };
 
+  const [mappingModalOpen, setMappingModalOpen] = React.useState(false);
+
   const methods: EndpointMethod[] = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
   const targetCpt = postTypes.find(pt => pt.slug === endpoint.storage?.targetCptSlug);
 
@@ -168,7 +170,15 @@ export const EndpointEditor: React.FC<EndpointEditorProps> = ({ endpoint, namesp
               
               <div className="grid grid-cols-2 gap-6">
                  <div className="col-span-2">
-                    <label className="text-[10px] text-zinc-500 font-bold mb-1 block">ROUTE PATH</label>
+                    <label className="text-[10px] text-zinc-500 font-bold mb-1 block flex justify-between">
+                      <span>ROUTE PATH</span>
+                      <button 
+                        onClick={() => onChange({...endpoint, route: endpoint.route + '/(?P<id>\\d+)'})}
+                        className="text-pink-400 hover:text-pink-300 transition-colors"
+                      >
+                        + Add Dynamic ID (Regex)
+                      </button>
+                    </label>
                     <div className="flex items-center">
                         <span className="bg-zinc-900 border border-r-0 border-zinc-700 text-zinc-400 px-3 py-2 rounded-l text-sm font-mono">/{namespace}/</span>
                         <input 
@@ -197,13 +207,24 @@ export const EndpointEditor: React.FC<EndpointEditorProps> = ({ endpoint, namesp
                     </div>
                  </div>
 
-                 <div>
+                 <div className="col-span-2">
                     <label className="text-[10px] text-zinc-500 font-bold mb-1 block">CALLBACK FUNCTION</label>
                     <input 
                         type="text" 
                         value={endpoint.callbackFunction} 
                         onChange={e => onChange({...endpoint, callbackFunction: e.target.value})}
                         className="w-full bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-white font-mono text-xs focus:border-pink-500 outline-none"
+                    />
+                 </div>
+                 
+                 <div className="col-span-2">
+                    <label className="text-[10px] text-zinc-500 font-bold mb-1 block">DESCRIPTION</label>
+                    <input 
+                        type="text" 
+                        value={endpoint.description} 
+                        onChange={e => onChange({...endpoint, description: e.target.value})}
+                        placeholder="What does this endpoint do?"
+                        className="w-full bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-white text-xs focus:border-pink-500 outline-none"
                     />
                  </div>
               </div>
@@ -330,27 +351,25 @@ export const EndpointEditor: React.FC<EndpointEditorProps> = ({ endpoint, namesp
                              <div className="bg-zinc-900/50 rounded p-3 border border-zinc-800">
                                  <div className="flex justify-between items-center mb-2">
                                      <p className="text-[10px] text-zinc-400 font-bold uppercase">Field Mapping</p>
-                                     <span className="text-[9px] text-green-500 font-mono">Auto-matched</span>
+                                     <button 
+                                        onClick={() => setMappingModalOpen(true)}
+                                        className="text-[9px] bg-green-500/10 text-green-500 px-2 py-0.5 rounded border border-green-500/20 hover:bg-green-500/20 transition-colors"
+                                     >
+                                        Edit Mapping
+                                     </button>
                                  </div>
                                  <div className="space-y-1">
-                                    {endpoint.parameters.map(param => (
-                                        <div key={param.id} className="flex items-center justify-between gap-2">
-                                            <span className="text-[10px] font-mono text-pink-300 w-1/3 truncate">{param.key}</span>
-                                            <ArrowRight size={10} className="text-zinc-600" />
-                                            <select
-                                                value={endpoint.storage?.fieldMapping[param.key] || ''}
-                                                onChange={e => handleMappingChange(param.key, e.target.value)}
-                                                className="w-1/2 bg-zinc-800 border-none rounded px-1 py-1 text-[10px] text-zinc-300 outline-none focus:ring-1 focus:ring-green-500/50"
-                                            >
-                                                <option value="">(None)</option>
-                                                <option value="post_title">Title</option>
-                                                <option value="post_content">Content</option>
-                                                {targetCpt.metaFields.map(mf => (
-                                                    <option key={mf.key} value={mf.key}>{mf.key}</option>
-                                                ))}
-                                            </select>
+                                    {endpoint.parameters.map(param => {
+                                        const mappedTo = endpoint.storage?.fieldMapping[param.key];
+                                        return (
+                                        <div key={param.id} className="flex items-center justify-between gap-2 bg-zinc-800/30 px-2 py-1 rounded">
+                                            <span className="text-[10px] font-mono text-pink-300 truncate w-1/2">{param.key}</span>
+                                            <ArrowRight size={10} className="text-zinc-600 shrink-0" />
+                                            <span className="text-[10px] text-zinc-400 truncate w-1/2 text-right">
+                                                {mappedTo ? mappedTo : <span className="text-zinc-600 italic">None</span>}
+                                            </span>
                                         </div>
-                                    ))}
+                                    )})}
                                  </div>
                              </div>
                          )}
@@ -365,6 +384,66 @@ export const EndpointEditor: React.FC<EndpointEditorProps> = ({ endpoint, namesp
         </div>
 
       </div>
+
+      {/* Field Mapping Modal */}
+      {mappingModalOpen && targetCpt && endpoint.storage && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-200">
+           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMappingModalOpen(false)} />
+           <div className="bg-[#18181b] border border-zinc-800 rounded-xl w-full max-w-lg shadow-2xl relative flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
+                  <div>
+                    <h3 className="font-bold text-white tracking-tight">Field Mapping</h3>
+                    <p className="text-xs text-zinc-500">Map endpoint parameters to {targetCpt.singularName} fields</p>
+                  </div>
+                  <button onClick={() => setMappingModalOpen(false)} className="text-zinc-500 hover:text-white transition-colors">
+                      <Trash2 size={16} className="hidden" />
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+              </div>
+              <div className="p-6 overflow-y-auto max-h-[60vh] space-y-4">
+                  <div className="grid grid-cols-[1fr_auto_1fr] gap-4 items-center mb-2 px-2">
+                      <span className="text-xs font-bold text-zinc-500 uppercase">Parameter</span>
+                      <span />
+                      <span className="text-xs font-bold text-zinc-500 uppercase">CPT Field</span>
+                  </div>
+                  {endpoint.parameters.map(param => (
+                      <div key={param.id} className="grid grid-cols-[1fr_auto_1fr] gap-4 items-center bg-zinc-900/50 p-2 rounded-lg border border-zinc-800/50">
+                          <span className="text-sm font-mono text-pink-300 px-2 truncate" title={param.key}>{param.key}</span>
+                          <ArrowRight size={14} className="text-zinc-600" />
+                          <select
+                              value={endpoint.storage?.fieldMapping[param.key] || ''}
+                              onChange={e => handleMappingChange(param.key, e.target.value)}
+                              className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-1.5 text-sm text-zinc-200 outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500"
+                          >
+                              <option value="">(None)</option>
+                              <optgroup label="Standard Fields">
+                                <option value="post_title">Post Title</option>
+                                <option value="post_content">Post Content</option>
+                              </optgroup>
+                              {targetCpt.metaFields.length > 0 && (
+                                  <optgroup label="Custom Meta Fields">
+                                      {targetCpt.metaFields.map(mf => (
+                                          <option key={mf.key} value={mf.key}>{mf.key}</option>
+                                      ))}
+                                  </optgroup>
+                              )}
+                          </select>
+                      </div>
+                  ))}
+                  {endpoint.parameters.length === 0 && (
+                      <div className="text-center py-8 text-zinc-500 text-sm border border-zinc-800 border-dashed rounded-lg">
+                          No parameters available to map.
+                      </div>
+                  )}
+              </div>
+              <div className="p-4 border-t border-zinc-800 flex justify-end bg-zinc-900/50">
+                  <button onClick={() => setMappingModalOpen(false)} className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium transition-colors">
+                      Done
+                  </button>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 };
