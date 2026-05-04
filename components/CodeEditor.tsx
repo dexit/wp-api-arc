@@ -1,6 +1,6 @@
 import React from 'react';
-import { EndpointParameter, CustomPostType } from '../types';
-import { Code, Copy, Box, Variable, Play, Check } from 'lucide-react';
+import { EndpointParameter, CustomPostType, FieldType } from '../types';
+import { Code, Copy, Box, Variable, Play, Check, Layers } from 'lucide-react';
 import Editor from 'react-simple-code-editor';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-clike';
@@ -42,7 +42,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ value, onChange, paramet
   const targetCpt = postTypes.find(p => p.slug === targetCptSlug);
 
   return (
-    <div className="flex h-[500px] border border-slate-700 rounded-lg overflow-hidden bg-[#1e1e1e]">
+    <div className="flex w-full min-h-[500px] border border-slate-700 rounded-lg overflow-hidden bg-[#1e1e1e]">
       {/* Editor Area */}
       <div className="flex-1 flex flex-col relative min-w-0">
         <div className="bg-[#252526] px-4 py-2 border-b border-slate-700 flex justify-between items-center z-10">
@@ -118,15 +118,30 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ value, onChange, paramet
                     >
                         Check $post_id
                     </button>
-                    {targetCpt.metaFields.map(field => (
-                        <button
-                            key={field.id}
-                            onClick={() => insertSnippet(`update_post_meta($post_id, '${field.key}', $value);`)}
-                            className="w-full text-left text-xs font-mono text-slate-400 hover:bg-[#37373d] p-1.5 rounded truncate transition-colors border border-transparent hover:border-slate-600"
-                        >
-                            meta: {field.key}
-                        </button>
-                    ))}
+                    {targetCpt.metaFields.map(field => {
+                        if (field.type === FieldType.REPEATER) {
+                            return (
+                                <button
+                                    key={field.id}
+                                    onClick={() => insertSnippet(`// ACF syntax for repeater\n$my_repeater_data = array(\n    array(\n        // sub_field_key => 'value'\n    )\n);\nupdate_field('${field.key}', $my_repeater_data, $post_id);`)}
+                                    className="w-full text-left text-xs font-mono text-purple-300 hover:bg-[#37373d] p-1.5 rounded truncate transition-colors border border-transparent hover:border-slate-600 flex items-center gap-1"
+                                    title="Insert Repeater snippet (ACF-style)"
+                                >
+                                    <Layers size={10} className="shrink-0" /> ACF loop: {field.key}
+                                </button>
+                            );
+                        }
+                        
+                        return (
+                            <button
+                                key={field.id}
+                                onClick={() => insertSnippet(`update_post_meta($post_id, '${field.key}', $value);`)}
+                                className="w-full text-left text-xs font-mono text-slate-400 hover:bg-[#37373d] p-1.5 rounded truncate transition-colors border border-transparent hover:border-slate-600"
+                            >
+                                meta: {field.key}
+                            </button>
+                        );
+                    })}
                 </div>
             )}
 
@@ -149,9 +164,15 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ value, onChange, paramet
                 </button>
                 <button
                     onClick={() => insertSnippet(`$headers = array('Content-Type: text/html; charset=UTF-8');\nwp_mail( $to, $subject, $body, $headers );`)}
-                    className="w-full text-left text-xs text-slate-300 hover:bg-[#37373d] p-1.5 rounded transition-colors border border-transparent hover:border-slate-600"
+                    className="w-full text-left text-xs text-slate-300 hover:bg-[#37373d] p-1.5 rounded transition-colors mb-1 border border-transparent hover:border-slate-600"
                 >
                     WP Mail
+                </button>
+                <button
+                    onClick={() => insertSnippet(`if ( have_rows('repeater_key', $post_id) ) {\n    while( have_rows('repeater_key', $post_id) ) {\n        the_row();\n        $sub_val = get_sub_field('sub_key');\n    }\n}`)}
+                    className="w-full text-left text-xs text-slate-300 hover:bg-[#37373d] p-1.5 rounded transition-colors border border-transparent hover:border-slate-600 truncate"
+                >
+                    ACF have_rows Loop
                 </button>
             </div>
 

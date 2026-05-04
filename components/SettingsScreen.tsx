@@ -1,17 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { AppSettings, AIProvider } from '../types';
+import React, { useState, useEffect, useRef } from 'react';
+import { AppSettings, AIProvider, ProjectState } from '../types';
 import { GEMINI_MODELS } from '../services/aiService';
 import { logger } from '../utils/logger';
-import { Settings, Cpu, Cloud, Key, Save, AlertTriangle, Monitor } from 'lucide-react';
+import { Settings, Cpu, Cloud, Key, Save, AlertTriangle, Monitor, Download, Upload } from 'lucide-react';
 
 interface SettingsScreenProps {
   settings: AppSettings;
   onSave: (newSettings: AppSettings) => void;
+  project: ProjectState;
+  setProject: (project: ProjectState) => void;
 }
 
-export const SettingsScreen: React.FC<SettingsScreenProps> = ({ settings, onSave }) => {
+export const SettingsScreen: React.FC<SettingsScreenProps> = ({ settings, onSave, project, setProject }) => {
   const [localState, setLocalState] = useState<AppSettings>(settings);
   const [localAIAvailable, setLocalAIAvailable] = useState<boolean | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Check for Chrome Local AI
@@ -42,6 +45,37 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ settings, onSave
       logger.success("Local AI Connection verified!");
     } catch (e: any) {
       logger.error("Local AI Test Failed", e.message);
+    }
+  };
+
+  const handleExport = () => {
+    const dataStr = JSON.stringify(project, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    const exportFileDefaultName = 'wp_api_architect_project.json';
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    logger.success('Project exported successfully');
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const importedProject = JSON.parse(event.target?.result as string);
+        setProject(importedProject);
+        logger.success('Project imported successfully');
+      } catch (error) {
+        logger.error('Failed to import project', 'Invalid JSON file');
+      }
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -145,6 +179,37 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ settings, onSave
                 </button>
              </div>
           )}
+        </div>
+
+        {/* Project Data */}
+        <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg">
+          <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+            <Save size={20} className="text-indigo-400" /> Project Data
+          </h3>
+          <div className="flex gap-4">
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-700 hover:border-indigo-500 rounded-lg text-sm text-white transition-colors"
+            >
+              <Download size={16} className="text-indigo-400" /> Export JSON
+            </button>
+            <input 
+              type="file" 
+              accept=".json" 
+              ref={fileInputRef} 
+              onChange={handleImport} 
+              className="hidden" 
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-700 hover:border-green-500 rounded-lg text-sm text-white transition-colors"
+            >
+              <Upload size={16} className="text-green-400" /> Import JSON
+            </button>
+          </div>
+          <p className="text-xs text-slate-500 mt-4">
+            Exports the complete project state including endpoints, models, taxonomies, and layout positions.
+          </p>
         </div>
 
         {/* Global Parameters */}

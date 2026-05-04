@@ -274,21 +274,6 @@ export const EndpointEditor: React.FC<EndpointEditorProps> = ({ endpoint, namesp
                  ))}
               </div>
            </div>
-
-           {/* Custom PHP */}
-           <div className="space-y-2">
-              <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                 <Code size={14} /> Custom Logic
-              </h3>
-              <CodeEditor 
-                value={endpoint.customPhp || ''}
-                onChange={(val) => onChange({...endpoint, customPhp: val})}
-                parameters={endpoint.parameters}
-                targetCptSlug={endpoint.storage?.enabled ? endpoint.storage.targetCptSlug : undefined}
-                postTypes={postTypes}
-              />
-           </div>
-
         </div>
 
         {/* Right Column: Flow Logic */}
@@ -380,9 +365,21 @@ export const EndpointEditor: React.FC<EndpointEditorProps> = ({ endpoint, namesp
                      </p>
                  )}
             </div>
-
         </div>
+      </div>
 
+      {/* Custom PHP - Full Width */}
+      <div className="mt-8 space-y-2">
+        <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+            <Code size={14} /> Custom Logic
+        </h3>
+        <CodeEditor 
+          value={endpoint.customPhp || ''}
+          onChange={(val) => onChange({...endpoint, customPhp: val})}
+          parameters={endpoint.parameters}
+          targetCptSlug={endpoint.storage?.enabled ? endpoint.storage.targetCptSlug : undefined}
+          postTypes={postTypes}
+        />
       </div>
 
       {/* Field Mapping Modal */}

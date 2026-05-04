@@ -29,13 +29,34 @@ const DEFAULT_SETTINGS: AppSettings = {
 };
 
 const App = () => {
-  const [project, setProject] = useState<ProjectState>(INITIAL_PROJECT_STATE);
+  const [project, setProject] = useState<ProjectState>(() => {
+    const saved = localStorage.getItem('wp_api_architect_project');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { console.error('Failed to parse saved project'); }
+    }
+    return INITIAL_PROJECT_STATE;
+  });
   const [currentView, setCurrentView] = useState<ViewMode>('flow'); 
   const [isAIModalOpen, setAIModalOpen] = useState(false);
-  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    const saved = localStorage.getItem('wp_api_architect_settings');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { console.error('Failed to parse settings'); }
+    }
+    return DEFAULT_SETTINGS;
+  });
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   
   const [editingResource, setEditingResource] = useState<SelectionState | null>(null);
+
+  // Save to localStorage effects
+  useEffect(() => {
+    localStorage.setItem('wp_api_architect_project', JSON.stringify(project));
+  }, [project]);
+
+  useEffect(() => {
+    localStorage.setItem('wp_api_architect_settings', JSON.stringify(settings));
+  }, [settings]);
 
   // Helper handling
   const handleUpdateHelper = (updatedHelper: GlobalHelper) => {
@@ -303,7 +324,7 @@ const App = () => {
       case 'blueprint':
         return <BlueprintView project={project} />;
       case 'settings':
-        return <SettingsScreen settings={settings} onSave={setSettings} />;
+        return <SettingsScreen settings={settings} onSave={setSettings} project={project} setProject={setProject} />;
       case 'code':
         return (
           <GlobalLogicEditor 

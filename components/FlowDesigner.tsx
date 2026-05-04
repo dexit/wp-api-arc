@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import { ProjectState, ResourceType, ContextMenuState, FieldType } from '../types';
-import { Network, Database, Box, Edit, Trash2, Copy, Move, Link as LinkIcon, Key, Table, List, ZoomIn, ZoomOut, Grid, Maximize, Tag } from 'lucide-react';
+import { Network, Database, Box, Edit, Trash2, Copy, Move, Link as LinkIcon, Key, Table, List, ZoomIn, ZoomOut, Grid, Maximize, Tag, Code } from 'lucide-react';
 
 interface FlowDesignerProps {
   project: ProjectState;
@@ -67,6 +67,15 @@ const EndpointNode = React.memo(({ id, data, x, y, onDragStart, onSelect, onCont
                         <div className="flex items-center gap-2 text-[9px] text-green-400 bg-green-900/10 p-1.5 rounded border border-green-900/20">
                             <Database size={10} />
                             Writes to: <span className="font-bold">{data.storage.targetCptSlug}</span>
+                        </div>
+                    </div>
+                )}
+                
+                {data.customPhp && data.customPhp.trim().length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-zinc-800/50">
+                        <div className="flex items-center gap-2 text-[9px] text-indigo-400 bg-indigo-900/10 p-1.5 rounded border border-indigo-900/20">
+                            <Code size={10} />
+                            <span className="font-bold">Custom Logic Enabled</span>
                         </div>
                     </div>
                 )}
