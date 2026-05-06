@@ -68,7 +68,7 @@ export const EndpointEditor: React.FC<EndpointEditorProps> = ({ endpoint, namesp
                 newMapping[param.key] = 'post_title';
                 return;
             } 
-            if (['content', 'body', 'description', 'message', 'text', 'bio'].includes(pKey)) {
+            if (['content', 'body', 'description', 'message', 'text', 'bio', 'excerpt', 'summary'].includes(pKey)) {
                 newMapping[param.key] = 'post_content';
                 return;
             }
@@ -81,13 +81,15 @@ export const EndpointEditor: React.FC<EndpointEditorProps> = ({ endpoint, namesp
             }
 
             // 3. Fuzzy / Smart Meta Match (Enhanced)
-            // e.g. param 'email' -> meta 'user_email' or 'contact_email'
-            // e.g. param 'url' -> meta 'website_url'
             const fuzzyMatch = target.metaFields.find(mf => {
                 const mKey = mf.key.toLowerCase();
-                // Check for common suffixes/prefixes (e.g. user_email matching email)
+                // Check for common suffixes/prefixes
                 if (mKey.endsWith(`_${pKey}`) || mKey.startsWith(`${pKey}_`)) return true;
-                // Check if param key is substantially inside meta key (e.g. email in contact_email)
+                // Check matches for email, phone, url, etc.
+                if (pKey === 'email' && mKey.includes('email')) return true;
+                if (pKey === 'phone' && (mKey.includes('phone') || mKey.includes('tel'))) return true;
+                if (pKey === 'url' && (mKey.includes('url') || mKey.includes('link'))) return true;
+                // Check partial match
                 if (pKey.length > 3 && mKey.includes(pKey)) return true;
                 return false;
             });
@@ -133,6 +135,19 @@ export const EndpointEditor: React.FC<EndpointEditorProps> = ({ endpoint, namesp
   };
 
   const [mappingModalOpen, setMappingModalOpen] = React.useState(false);
+  
+  const regenerateMapping = () => {
+    if (endpoint.storage?.targetCptSlug) {
+      const newMapping = generateAutoMapping(endpoint.storage.targetCptSlug);
+      onChange({
+        ...endpoint,
+        storage: {
+          ...endpoint.storage,
+          fieldMapping: newMapping
+        }
+      });
+    }
+  };
 
   const methods: EndpointMethod[] = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
   const targetCpt = postTypes.find(pt => pt.slug === endpoint.storage?.targetCptSlug);

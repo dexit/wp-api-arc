@@ -13,7 +13,9 @@ import {
   Tag,
   Zap,
   Braces,
-  Globe
+  Globe,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -21,6 +23,8 @@ interface SidebarProps {
   currentView: ViewMode;
   selection: { type: ResourceType; id: string };
   isTerminalOpen: boolean;
+  theme: 'light' | 'dark';
+  onToggleTheme: () => void;
   onSelect: (type: ResourceType, id: string) => void;
   onViewChange: (view: ViewMode) => void;
   onAddResource: () => void;
@@ -35,6 +39,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentView,
   selection,
   isTerminalOpen,
+  theme,
+  onToggleTheme,
   onSelect,
   onViewChange,
   onAddResource,
@@ -192,6 +198,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Footer Controls */}
       <div className="p-3 border-t border-zinc-800 bg-[#0e0e11] space-y-2">
+        <button
+          onClick={onToggleTheme}
+          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          className="w-full py-2 px-3 rounded-md flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all border border-transparent hover:border-zinc-700"
+        >
+          {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+          {!isCollapsed && <span className="ml-2 text-xs">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
+        </button>
+
         <button 
           onClick={onToggleTerminal}
           title={isTerminalOpen ? 'Hide Console' : 'Show Console'}

@@ -276,6 +276,7 @@ export const FlowDesigner: React.FC<FlowDesignerProps> = ({ project, onSelect, o
   const [isDraggingCanvas, setIsDraggingCanvas] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [showGrid, setShowGrid] = useState(true);
+  const [snapToGrid, setSnapToGrid] = useState(true);
 
   const [draggingNode, setDraggingNode] = useState<{ type: ResourceType, id: string, offsetX: number, offsetY: number } | null>(null);
   const [nodePositions, setNodePositions] = useState<Record<string, { x: number, y: number }>>({});
@@ -393,7 +394,7 @@ export const FlowDesigner: React.FC<FlowDesignerProps> = ({ project, onSelect, o
       setViewport(prev => ({ ...prev, x: e.clientX - dragStart.x, y: e.clientY - dragStart.y }));
     } else if (draggingNode) {
       // Precision Snap
-      const GRID_SIZE = showGrid ? 20 : 1;
+      const GRID_SIZE = snapToGrid ? 20 : 1;
       const targetCanvasX = pos.x - draggingNode.offsetX;
       const targetCanvasY = pos.y - draggingNode.offsetY;
       
@@ -778,6 +779,13 @@ export const FlowDesigner: React.FC<FlowDesignerProps> = ({ project, onSelect, o
            className={`p-2 rounded-lg border ${showGrid ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-400' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}`}
          >
             <Grid size={18} />
+         </button>
+         <button 
+           onClick={() => setSnapToGrid(!snapToGrid)} 
+           className={`p-2 rounded-lg border text-[10px] font-bold ${snapToGrid ? 'bg-green-500/20 border-green-500/50 text-green-400' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}`}
+           title="Toggle Snapping"
+         >
+            SNAP
          </button>
          <div className="bg-zinc-900/80 px-3 py-1.5 rounded-lg border border-zinc-800 text-[10px] text-zinc-500 font-mono">
             X: {mousePos.x} Y: {mousePos.y}

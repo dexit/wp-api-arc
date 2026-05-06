@@ -46,6 +46,19 @@ const App = () => {
     return DEFAULT_SETTINGS;
   });
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.body.classList.add('dark');
+      document.body.classList.remove('bg-white', 'text-slate-900');
+      document.body.classList.add('bg-slate-900', 'text-slate-100');
+    } else {
+      document.body.classList.remove('dark');
+      document.body.classList.remove('bg-slate-900', 'text-slate-100');
+      document.body.classList.add('bg-white', 'text-slate-900');
+    }
+  }, [theme]);
   
   const [editingResource, setEditingResource] = useState<SelectionState | null>(null);
 
@@ -379,6 +392,8 @@ const App = () => {
         currentView={currentView}
         selection={editingResource || { type: 'postType', id: '' }}
         isTerminalOpen={isTerminalOpen}
+        theme={theme}
+        onToggleTheme={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
         onSelect={handleSelect}
         onViewChange={handleViewChange}
         onAddResource={handleAddResource}
