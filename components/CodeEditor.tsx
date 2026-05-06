@@ -151,6 +151,25 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ value, onChange, paramet
                     <Play size={10} /> SNIPPETS
                 </div>
                 <button
+                    onClick={() => insertSnippet(`global $wpdb;\n$results = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}posts LIMIT 10", OBJECT );`)}
+                    className="w-full text-left text-xs text-slate-300 hover:bg-[#37373d] p-1.5 rounded transition-colors mb-1 border border-transparent hover:border-slate-600 truncate"
+                    title="Custom Read with WPDB"
+                >
+                    $wpdb Custom Query
+                </button>
+                <button
+                    onClick={() => insertSnippet(`$args = array(\n    'post_type' => 'post',\n    'posts_per_page' => -1\n);\n$query = new WP_Query( $args );`)}
+                    className="w-full text-left text-xs text-slate-300 hover:bg-[#37373d] p-1.5 rounded transition-colors mb-1 border border-transparent hover:border-slate-600 truncate"
+                >
+                    WP_Query Loop
+                </button>
+                <button
+                    onClick={() => insertSnippet(`$response = wp_remote_get( 'https://api.example.com/data' );\nif ( is_wp_error( $response ) ) {\n    $error_message = $response->get_error_message();\n} else {\n    $body = wp_remote_retrieve_body( $response );\n    $data = json_decode( $body );\n}`)}
+                    className="w-full text-left text-xs text-slate-300 hover:bg-[#37373d] p-1.5 rounded transition-colors mb-1 border border-transparent hover:border-slate-600 truncate"
+                >
+                    HTTP GET Request
+                </button>
+                <button
                     onClick={() => insertSnippet(`if ( is_wp_error( $result ) ) {\n    return new WP_Error( 'error', 'Message', array( 'status' => 500 ) );\n}`)}
                     className="w-full text-left text-xs text-slate-300 hover:bg-[#37373d] p-1.5 rounded transition-colors mb-1 border border-transparent hover:border-slate-600"
                 >

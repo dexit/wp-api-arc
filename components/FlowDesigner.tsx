@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import { ProjectState, ResourceType, ContextMenuState, FieldType } from '../types';
-import { Network, Database, Box, Edit, Trash2, Copy, Move, Link as LinkIcon, Key, Table, List, ZoomIn, ZoomOut, Grid, Maximize, Tag, Code } from 'lucide-react';
+import { Network, Database, Box, Edit, Trash2, Copy, Move, Link as LinkIcon, Key, Table, List, ZoomIn, ZoomOut, Grid, Maximize, Tag, Code, Braces, Workflow } from 'lucide-react';
 
 interface FlowDesignerProps {
   project: ProjectState;
@@ -29,6 +29,11 @@ const NodePort = React.memo(({ type, id, portType, style, onStartConnection, onE
 ));
 
 const EndpointNode = React.memo(({ id, data, x, y, onDragStart, onSelect, onContextMenu, onStartConnection, onEndConnection }: any) => {
+    const hasDTO = data.parameters && data.parameters.length > 0;
+    const hasStorage = data.storage?.enabled;
+    const hasLogic = data.customPhp && data.customPhp.trim().length > 0;
+    const isETL = hasStorage && hasLogic;
+
     return (
         <div
             className="absolute w-[280px] bg-[#121214] rounded-lg shadow-2xl border border-zinc-800 group hover:border-pink-500/50 transition-colors duration-200 select-none"
@@ -54,7 +59,13 @@ const EndpointNode = React.memo(({ id, data, x, y, onDragStart, onSelect, onCont
             </div>
 
             <div className="p-2 space-y-1">
-                {data.parameters.length === 0 && <div className="pl-1 text-[10px] text-zinc-700 italic">No params</div>}
+                {hasDTO && (
+                    <div className="mb-1.5 px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded-sm w-fit">
+                        <span className="text-[8px] font-bold text-yellow-500/80 uppercase tracking-widest">DTO SCHEMA</span>
+                    </div>
+                )}
+                {!hasDTO && <div className="pl-1 text-[10px] text-zinc-700 italic">No params</div>}
+                
                 {data.parameters.slice(0,4).map((p: any) => (
                     <div key={p.id} className="flex justify-between items-center px-2 py-1 bg-zinc-900/30 rounded border border-transparent hover:border-zinc-800">
                         <span className="text-[10px] text-pink-300 font-mono">{p.key}</span>
@@ -62,21 +73,26 @@ const EndpointNode = React.memo(({ id, data, x, y, onDragStart, onSelect, onCont
                     </div>
                 ))}
                 
-                {data.storage?.enabled && (
-                    <div className="mt-2 pt-2 border-t border-zinc-800/50">
-                        <div className="flex items-center gap-2 text-[9px] text-green-400 bg-green-900/10 p-1.5 rounded border border-green-900/20">
-                            <Database size={10} />
-                            Writes to: <span className="font-bold">{data.storage.targetCptSlug}</span>
-                        </div>
-                    </div>
-                )}
-                
-                {data.customPhp && data.customPhp.trim().length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-zinc-800/50">
-                        <div className="flex items-center gap-2 text-[9px] text-indigo-400 bg-indigo-900/10 p-1.5 rounded border border-indigo-900/20">
-                            <Code size={10} />
-                            <span className="font-bold">Custom Logic Enabled</span>
-                        </div>
+                {(hasStorage || hasLogic) && (
+                    <div className="mt-2 pt-2 border-t border-zinc-800/50 space-y-1.5">
+                        {isETL && (
+                             <div className="flex items-center gap-2 text-[9px] text-purple-400 bg-purple-900/10 p-1.5 rounded border border-purple-900/20">
+                                <Workflow size={10} className="shrink-0" />
+                                <span className="font-bold tracking-wide">ETL PIPELINE</span>
+                             </div>
+                        )}
+                        {hasStorage && !isETL && (
+                            <div className="flex items-center gap-2 text-[9px] text-green-400 bg-green-900/10 p-1.5 rounded border border-green-900/20">
+                                <Database size={10} className="shrink-0" />
+                                Writes to: <span className="font-bold">{data.storage.targetCptSlug}</span>
+                            </div>
+                        )}
+                        {hasLogic && !isETL && (
+                            <div className="flex items-center gap-2 text-[9px] text-indigo-400 bg-indigo-900/10 p-1.5 rounded border border-indigo-900/20">
+                                <Code size={10} className="shrink-0" />
+                                <span className="font-bold tracking-wide">CUSTOM LOGIC</span>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -159,6 +175,42 @@ const TaxonomyNode = React.memo(({ id, data, x, y, onDragStart, onSelect, onCont
                     ))}
                     {data.connectedPostTypes.length === 0 && <span className="text-[9px] text-zinc-600 italic">Unconnected</span>}
                 </div>
+            </div>
+        </div>
+    );
+});
+
+const GlobalHelperNode = React.memo(({ id, data, x, y, onDragStart, onSelect, onContextMenu, onStartConnection, onEndConnection }: any) => {
+    return (
+        <div
+            className="absolute w-[260px] bg-[#1a1a2e] rounded-lg shadow-xl border border-blue-900/50 group hover:border-blue-400/80 transition-colors duration-200 select-none overflow-hidden"
+            style={{ left: x, top: y }}
+            onMouseDown={(e) => onDragStart(e, 'helper', id)}
+            onDoubleClick={(e) => { e.stopPropagation(); onSelect('helper', id); }}
+            onContextMenu={(e) => onContextMenu(e, 'helper', id)}
+        >
+            {/* Ambient Glow */}
+            <div className="absolute inset-0 bg-blue-500/5 rounded-lg pointer-events-none group-hover:bg-blue-500/10 transition-colors" />
+
+            <div className="px-3 py-2 bg-[#16213e]/80 border-b border-blue-900/50 flex items-center justify-between z-10 relative">
+                <div className="flex items-center gap-2 overflow-hidden">
+                    <Braces size={14} className="text-blue-400 shrink-0" />
+                    <span className="text-xs font-bold text-blue-100 font-mono truncate">{data.name}()</span>
+                </div>
+                <span className="text-[9px] bg-blue-900/30 text-blue-300 px-1.5 py-0.5 rounded font-bold tracking-wider uppercase border border-blue-700/50 shadow-inner block">Global</span>
+            </div>
+            <div className="p-2 z-10 relative space-y-2">
+                <div className="flex items-start gap-1">
+                    <Code size={10} className="text-blue-300/70 mt-0.5 shrink-0" />
+                    <span className="text-[10px] text-blue-200/80 font-mono leading-tight break-all">
+                        ({data.parameters})
+                    </span>
+                </div>
+                {data.description && (
+                    <div className="text-[9px] text-blue-100/50 line-clamp-2 mt-1 px-1 border-l-2 border-blue-800/50 pl-2">
+                        {data.description}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -248,7 +300,7 @@ export const FlowDesigner: React.FC<FlowDesignerProps> = ({ project, onSelect, o
   useEffect(() => {
     setNodePositions(prev => {
         // If positions already exist for all nodes, don't re-layout constantly
-        const allKeys = [...postTypes.map(p=>p.id), ...customEndpoints.map(e=>e.id), ...taxonomies.map(t=>t.id)];
+        const allKeys = [...postTypes.map(p=>p.id), ...customEndpoints.map(e=>e.id), ...taxonomies.map(t=>t.id), ...(project.globalHelpers || []).map(h=>h.id)];
         if (allKeys.every(k => prev[k])) return prev;
 
         const next = { ...prev };
@@ -304,10 +356,17 @@ export const FlowDesigner: React.FC<FlowDesignerProps> = ({ project, onSelect, o
                  next[tax.id] = { x, y };
             }
         });
+
+        // 4. Place Global Helpers (Top Left or scattered)
+        (project.globalHelpers || []).forEach((helper, i) => {
+            if (!next[helper.id]) {
+                next[helper.id] = { x: START_X - (COL_GAP * 1.5), y: START_Y - 100 + (i * 150) };
+            }
+        });
         
         return next;
     });
-  }, [postTypes.length, customEndpoints.length, taxonomies.length]); 
+  }, [postTypes.length, customEndpoints.length, taxonomies.length, project.globalHelpers?.length]); 
 
   const screenToCanvas = useCallback((sx: number, sy: number) => {
      const rect = containerRef.current?.getBoundingClientRect();
@@ -595,6 +654,27 @@ export const FlowDesigner: React.FC<FlowDesignerProps> = ({ project, onSelect, o
         }}
       >
          <svg className="absolute inset-0 overflow-visible w-full h-full pointer-events-none z-0">
+             {/* Architecture Phase Labels */}
+             <g className="opacity-10" transform="translate(-200, 50)">
+                <text x="0" y="0" fill="#60a5fa" fontSize="48" fontWeight="bold" fontFamily="monospace" letterSpacing="0.1em">GLOBAL LAYER</text>
+                <text x="0" y="30" fill="#60a5fa" fontSize="16" fontFamily="sans-serif">Shared Logic & Utilities</text>
+             </g>
+
+             <g className="opacity-10" transform="translate(0, 50)">
+                <text x="0" y="0" fill="#a78bfa" fontSize="48" fontWeight="bold" fontFamily="monospace" letterSpacing="0.1em">API / DTO LAYER</text>
+                <text x="0" y="30" fill="#a78bfa" fontSize="16" fontFamily="sans-serif">Endpoints, Routing & ETL</text>
+             </g>
+
+             <g className="opacity-10" transform="translate(400, 50)">
+                <text x="0" y="0" fill="#818cf8" fontSize="48" fontWeight="bold" fontFamily="monospace" letterSpacing="0.1em">CORE DOMAIN</text>
+                <text x="0" y="30" fill="#818cf8" fontSize="16" fontFamily="sans-serif">Data Models & Schema</text>
+             </g>
+
+             <g className="opacity-10" transform="translate(800, 50)">
+                <text x="0" y="0" fill="#f472b6" fontSize="48" fontWeight="bold" fontFamily="monospace" letterSpacing="0.1em">CLASSIFICATION</text>
+                <text x="0" y="30" fill="#f472b6" fontSize="16" fontFamily="sans-serif">Taxonomies & Grouping</text>
+             </g>
+
              {connections}
              {connectionDrag.isActive && (
                 <path 
@@ -650,6 +730,18 @@ export const FlowDesigner: React.FC<FlowDesignerProps> = ({ project, onSelect, o
                     onContextMenu={handleContextMenu}
                 />
             ))}
+            {(project.globalHelpers || []).map(helper => (
+                <GlobalHelperNode 
+                    key={helper.id}
+                    id={helper.id}
+                    data={helper}
+                    x={nodePositions[helper.id]?.x || 0}
+                    y={nodePositions[helper.id]?.y || 0}
+                    onDragStart={startDragNode}
+                    onSelect={onSelect}
+                    onContextMenu={handleContextMenu}
+                />
+            ))}
          </div>
       </div>
 
@@ -664,6 +756,9 @@ export const FlowDesigner: React.FC<FlowDesignerProps> = ({ project, onSelect, o
               </button>
               <button onClick={() => onAdd('taxonomy')} className="p-2.5 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-colors" title="New Taxonomy">
                 <Tag size={20} />
+              </button>
+              <button onClick={() => onAdd('helper')} className="p-2.5 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-colors" title="New Global Function">
+                <Braces size={20} />
               </button>
               <div className="w-px bg-zinc-800 mx-1 my-2"></div>
               <button onClick={() => setViewport({x:0,y:0,scale:1})} className="p-2.5 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-colors" title="Reset View">

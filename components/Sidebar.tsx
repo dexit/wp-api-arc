@@ -45,22 +45,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   
-  const SectionHeader = ({ label }: { label: string }) => (
+  const SectionHeader: React.FC<{ label: string }> = ({ label }) => (
     <div className={`px-4 mt-6 mb-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest ${isCollapsed ? 'hidden' : 'block'}`}>{label}</div>
   );
 
-  const NavItem = ({ 
-    active, 
-    onClick, 
-    icon: Icon, 
-    label, 
-    subLabel 
-  }: { 
+  const NavItem: React.FC<{ 
     active: boolean; 
     onClick: () => void; 
     icon: any; 
     label: string; 
     subLabel?: string 
+  }> = ({ 
+    active, 
+    onClick, 
+    icon: Icon, 
+    label, 
+    subLabel 
   }) => (
     <button
       onClick={onClick}

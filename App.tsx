@@ -253,25 +253,44 @@ const App = () => {
        const targetCpt = project.postTypes.find(pt => pt.id === target.id);
        if (sourceCpt && targetCpt) {
           const existing = sourceCpt.metaFields.find(f => f.type === FieldType.RELATIONSHIP && f.targetPostType === targetCpt.slug);
-          if (existing) {
-             logger.warn('Relationship already exists.');
-             return;
+          
+          if (!existing) {
+             const newField: MetaField = {
+                id: `field_${Date.now()}`,
+                key: `${targetCpt.slug}_id`,
+                label: `Related ${targetCpt.singularName}`,
+                type: FieldType.RELATIONSHIP,
+                description: `Link to a ${targetCpt.singularName}`,
+                required: false,
+                showInRest: true,
+                targetPostType: targetCpt.slug
+             };
+             handleUpdateResource({
+                ...sourceCpt,
+                metaFields: [...sourceCpt.metaFields, newField]
+             });
+             logger.success(`Created Relationship: ${sourceCpt.singularName} -> ${targetCpt.singularName}`);
           }
-          const newField: MetaField = {
-             id: `field_${Date.now()}`,
-             key: `${targetCpt.slug}_id`,
-             label: `Related ${targetCpt.singularName}`,
-             type: FieldType.RELATIONSHIP,
-             description: `Link to a ${targetCpt.singularName}`,
-             required: false,
-             showInRest: true,
-             targetPostType: targetCpt.slug
-          };
-          handleUpdateResource({
-             ...sourceCpt,
-             metaFields: [...sourceCpt.metaFields, newField]
-          });
-          logger.success(`Created Relationship: ${sourceCpt.singularName} -> ${targetCpt.singularName}`);
+           
+          // Bidirectional
+          const reverseExisting = targetCpt.metaFields.find(f => f.type === FieldType.RELATIONSHIP && f.targetPostType === sourceCpt.slug);
+          if (!reverseExisting) {
+            const reverseField: MetaField = {
+               id: `field_${Date.now()}`,
+               key: `${sourceCpt.slug}_id`,
+               label: `Related ${sourceCpt.singularName}`,
+               type: FieldType.RELATIONSHIP,
+               description: `Link to a ${sourceCpt.singularName}`,
+               required: false,
+               showInRest: true,
+               targetPostType: sourceCpt.slug
+            };
+            handleUpdateResource({
+               ...targetCpt,
+               metaFields: [...targetCpt.metaFields, reverseField]
+            });
+            logger.success(`Created Bidirectional Relationship: ${targetCpt.singularName} -> ${sourceCpt.singularName}`);
+          }
        }
     }
   };
@@ -317,6 +336,7 @@ const App = () => {
                if (type === 'postType') handleAddResource();
                else if (type === 'endpoint') handleAddEndpoint();
                else if (type === 'taxonomy') handleAddTaxonomy();
+               else if (type === 'helper') handleAddHelper();
              }}
              onConnect={handleConnect}
            />
