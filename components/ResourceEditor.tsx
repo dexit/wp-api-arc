@@ -208,20 +208,22 @@ export const ResourceEditor: React.FC<ResourceEditorProps> = ({ cpt, allTaxonomi
                  {/* Visual Guide Line */}
                  <div className="absolute left-3 top-0 bottom-4 w-px bg-zinc-800"></div>
                  
-                 <div className="pl-0">
+                  <div className="flex items-center justify-between mb-2 mt-1">
+                     <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Sub-fields</span>
+                     <button 
+                       onClick={() => addField(field.id)}
+                       className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 py-0.5 px-2 rounded hover:bg-zinc-800 transition-colors"
+                     >
+                        <Plus size={10}/> Add Field
+                     </button>
+                  </div>
+                  <div className="pl-0">
                     {field.subFields && field.subFields.length > 0 ? (
                       renderFields(field.subFields, level + 1)
                     ) : (
-                      <div className="text-[10px] text-zinc-600 italic pl-6 py-2">No sub-fields defined.</div>
+                      <div className="text-[10px] text-zinc-600 italic py-2">No sub-fields defined.</div>
                     )}
-                 </div>
-
-                 <button 
-                   onClick={() => addField(field.id)}
-                   className="ml-6 mt-1 text-xs text-zinc-500 hover:text-purple-400 flex items-center gap-1.5 py-1 px-2 rounded hover:bg-zinc-800/50 transition-colors"
-                 >
-                    <FolderPlus size={12}/> Add Sub-field
-                 </button>
+                  </div>
              </div>
           )}
         </div>

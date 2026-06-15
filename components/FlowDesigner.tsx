@@ -380,7 +380,7 @@ export const FlowDesigner: React.FC<FlowDesignerProps> = ({ project, onSelect, o
 
   // Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.target === containerRef.current || (e.target as HTMLElement).tagName === 'svg') {
+    if (e.button === 1 || e.target === containerRef.current || (e.target as HTMLElement).tagName === 'svg') {
       setIsDraggingCanvas(true);
       setDragStart({ x: e.clientX - viewport.x, y: e.clientY - viewport.y });
     }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { EndpointParameter, CustomPostType, FieldType } from '../types';
+import { EndpointParameter, CustomPostType, FieldType, GlobalHelper } from '../types';
 import { Code, Copy, Box, Variable, Play, Check, Layers } from 'lucide-react';
 import Editor from 'react-simple-code-editor';
 import Prism from 'prismjs';
@@ -14,9 +14,10 @@ interface CodeEditorProps {
   parameters: EndpointParameter[];
   targetCptSlug?: string;
   postTypes: CustomPostType[];
+  globalHelpers: GlobalHelper[];
 }
 
-export const CodeEditor: React.FC<CodeEditorProps> = ({ value, onChange, parameters, targetCptSlug, postTypes }) => {
+export const CodeEditor: React.FC<CodeEditorProps> = ({ value, onChange, parameters, targetCptSlug, postTypes, globalHelpers }) => {
   const [copied, setCopied] = React.useState(false);
 
   const insertSnippet = (snippet: string) => {
@@ -85,6 +86,23 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ value, onChange, paramet
         
         <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-4">
             
+            {/* Global Helpers */}
+            <div>
+                <div className="text-[10px] text-slate-500 mb-2 font-bold flex items-center gap-1">
+                    <Check size={10} /> GLOBAL HELPERS
+                </div>
+                {globalHelpers.map(helper => (
+                    <button
+                        key={helper.id}
+                        onClick={() => insertSnippet(`${helper.name}(/* ${helper.parameters} */);`)}
+                        className="w-full text-left text-xs font-mono text-emerald-300 hover:bg-[#37373d] p-1.5 rounded truncate transition-colors mb-1 border border-transparent hover:border-slate-600"
+                        title={helper.description}
+                    >
+                        {helper.name}()
+                    </button>
+                ))}
+            </div>
+
             {/* Request Params */}
             <div>
                 <div className="text-[10px] text-slate-500 mb-2 font-bold flex items-center gap-1">

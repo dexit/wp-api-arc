@@ -95,7 +95,8 @@ if ( ! defined( 'ABSPATH' ) ) {
        php += `/**\n * ${helper.description || helper.name}\n */\n`;
        php += `if ( ! function_exists( '${helper.name}' ) ) {\n`;
        php += `\tfunction ${helper.name}( ${helper.parameters} ) {\n`;
-       php += `\t\t${helper.phpCode.split('\n').join('\n\t\t')}\n`;
+       // Indent each line by 2 tabs
+       php += helper.phpCode.split('\n').map(line => `\t\t${line.trimLeft()}`).join('\n') + '\n';
        php += `\t}\n}\n\n`;
     });
   }
@@ -281,6 +282,10 @@ export const generatePlaygroundBlueprint = (project: ProjectState): string => {
         "step": "login",
         "username": "admin",
         "password": "password"
+      },
+      {
+        "step": "runPHP",
+        "code": "if (!is_dir('/wordpress/wp-content/plugins/${projectSlug}')) { mkdir('/wordpress/wp-content/plugins/${projectSlug}', 0755, true); }"
       },
       {
         "step": "writeFile",

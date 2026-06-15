@@ -1,20 +1,12 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# WP API Architect
 
-# Run and deploy your AI Studio app
+WP API Architect is an advanced developer environment for composing custom post types, taxonomies, global helpers, and full custom REST APIs in WordPress.
 
-This contains everything you need to run your app locally.
+## Core Architecture
+- **Vite + React (SPA)**: Ultra-responsive modern designer workspace.
+- **WP Playground Integration**: Executes and previews your custom PHP build in real-time in the browser.
+- **Dynamic Content Modeler**: Visual schema designer and custom database properties coordinator.
+- **Endpoint Editor**: Design fully mapped, state-managed GET, POST, PUT, DELETE REST API endpoints.
 
-View your app in AI Studio: https://ai.studio/apps/231b5b21-0b5e-415f-864a-803a656ca54b
-
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Operational Setup
+All files compile and run inside standard modern browser instances behind an interactive preview framework.

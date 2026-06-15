@@ -32,7 +32,10 @@ const App = () => {
   const [project, setProject] = useState<ProjectState>(() => {
     const saved = localStorage.getItem('wp_api_architect_project');
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) { console.error('Failed to parse saved project'); }
+      try { 
+        const parsed = JSON.parse(saved);
+        return { ...INITIAL_PROJECT_STATE, ...parsed }; 
+      } catch (e) { console.error('Failed to parse saved project'); }
     }
     return INITIAL_PROJECT_STATE;
   });
@@ -437,6 +440,7 @@ const App = () => {
             endpoint={editingEndpoint}
             namespace={project.namespace}
             postTypes={project.postTypes}
+            globalHelpers={project.globalHelpers}
             onChange={handleUpdateEndpoint}
             onDelete={() => handleDeleteEndpoint(editingEndpoint.id)}
           />

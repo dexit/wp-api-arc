@@ -7,11 +7,12 @@ interface EndpointEditorProps {
   endpoint: CustomEndpoint;
   namespace: string;
   postTypes: CustomPostType[];
+  globalHelpers: GlobalHelper[];
   onChange: (updated: CustomEndpoint) => void;
   onDelete: () => void;
 }
 
-export const EndpointEditor: React.FC<EndpointEditorProps> = ({ endpoint, namespace, postTypes, onChange, onDelete }) => {
+export const EndpointEditor: React.FC<EndpointEditorProps> = ({ endpoint, namespace, postTypes, globalHelpers, onChange, onDelete }) => {
   
   const handleParamChange = (id: string, changes: Partial<EndpointParameter>) => {
     const updatedParams = endpoint.parameters.map(p => p.id === id ? { ...p, ...changes } : p);
@@ -394,6 +395,7 @@ export const EndpointEditor: React.FC<EndpointEditorProps> = ({ endpoint, namesp
           parameters={endpoint.parameters}
           targetCptSlug={endpoint.storage?.enabled ? endpoint.storage.targetCptSlug : undefined}
           postTypes={postTypes}
+          globalHelpers={globalHelpers}
         />
       </div>
 
