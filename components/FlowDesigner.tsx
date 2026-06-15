@@ -28,30 +28,56 @@ const NodePort = React.memo(({ type, id, portType, style, onStartConnection, onE
   />
 ));
 
-const EndpointNode = React.memo(({ id, data, x, y, onDragStart, onSelect, onContextMenu, onStartConnection, onEndConnection }: any) => {
+const EndpointNode = React.memo(({ 
+    id, 
+    data, 
+    x, 
+    y, 
+    onDragStart, 
+    onSelect, 
+    onContextMenu, 
+    onStartConnection, 
+    onEndConnection,
+    hoveredCptId,
+    onHover,
+    postTypes
+}: any) => {
     const hasDTO = data.parameters && data.parameters.length > 0;
     const hasStorage = data.storage?.enabled;
     const hasLogic = data.customPhp && data.customPhp.trim().length > 0;
     const isETL = hasStorage && hasLogic;
 
+    const isConnectedToHoveredCpt = useMemo(() => {
+        if (!hoveredCptId) return false;
+        const hoveredCptObj = postTypes?.find((c: any) => c.id === hoveredCptId);
+        return data.storage?.enabled && data.storage.targetCptSlug === hoveredCptObj?.slug;
+    }, [hoveredCptId, data.storage, postTypes]);
+
     return (
         <div
-            className="absolute w-[280px] bg-[#121214] rounded-lg shadow-2xl border border-zinc-800 group hover:border-pink-500/50 transition-colors duration-200 select-none"
+            id={`node-endpoint-${id}`}
+            className={`absolute w-[280px] bg-[#121214] rounded-lg shadow-2xl border transition-all duration-300 select-none ${
+                isConnectedToHoveredCpt 
+                    ? 'border-pink-500 shadow-pink-500/20 scale-[1.03] z-40 ring-1 ring-pink-400' 
+                    : 'border-zinc-800 hover:border-pink-500/50'
+            }`}
             style={{ left: x, top: y }}
             onMouseDown={(e) => onDragStart(e, 'endpoint', id)}
             onDoubleClick={(e) => { e.stopPropagation(); onSelect('endpoint', id); }}
             onContextMenu={(e) => onContextMenu(e, 'endpoint', id)}
+            onMouseEnter={() => onHover && onHover(id)}
+            onMouseLeave={() => onHover && onHover(null)}
         >
             <NodePort type="endpoint" id={id} portType="source" style={{ top: 52 }} onStartConnection={onStartConnection} onEndConnection={onEndConnection} />
             
             <div className="px-3 py-2 bg-zinc-900/50 border-b border-zinc-800 flex items-center justify-between rounded-t-lg">
                 <div className="flex items-center gap-2 overflow-hidden">
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
-                            data.method === 'GET' ? 'bg-blue-500/20 text-blue-400' : 
-                            data.method === 'POST' ? 'bg-green-500/20 text-green-400' : 
-                            'bg-orange-500/20 text-orange-400'
-                        }`}>
-                            {data.method}
+                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
+                        data.method === 'GET' ? 'bg-blue-500/20 text-blue-400' : 
+                        data.method === 'POST' ? 'bg-green-500/20 text-green-400' : 
+                        'bg-orange-500/20 text-orange-400'
+                    }`}>
+                        {data.method}
                     </span>
                     <span className="text-xs font-bold text-zinc-200 font-mono truncate" title={data.route}>{data.route}</span>
                 </div>
@@ -60,23 +86,41 @@ const EndpointNode = React.memo(({ id, data, x, y, onDragStart, onSelect, onCont
 
             <div className="p-2 space-y-1">
                 {hasDTO && (
-                    <div className="mb-1.5 px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded-sm w-fit">
-                        <span className="text-[8px] font-bold text-yellow-500/80 uppercase tracking-widest">DTO SCHEMA</span>
+                    <div className="mb-1.5 px-2 py-0.5 bg-amber-500/10 border border-amber-500/25 rounded-sm w-fit">
+                        <span className="text-[8px] font-bold text-amber-500/80 uppercase tracking-widest">DTO SCHEMA</span>
                     </div>
                 )}
                 {!hasDTO && <div className="pl-1 text-[10px] text-zinc-700 italic">No params</div>}
                 
-                {data.parameters.slice(0,4).map((p: any) => (
-                    <div key={p.id} className="flex justify-between items-center px-2 py-1 bg-zinc-900/30 rounded border border-transparent hover:border-zinc-800">
-                        <span className="text-[10px] text-pink-300 font-mono">{p.key}</span>
-                        <span className="text-[9px] text-zinc-600">{p.type}</span>
-                    </div>
-                ))}
+                {data.parameters.slice(0,4).map((p: any) => {
+                    const isMapped = data.storage?.enabled && data.storage.fieldMapping && data.storage.fieldMapping[p.key];
+                    return (
+                        <div 
+                            key={p.id} 
+                            className={`flex justify-between items-center px-2 py-1 rounded border border-transparent transition-all ${
+                                p.required 
+                                    ? 'bg-pink-950/20 border-pink-500/20 hover:border-pink-500/40' 
+                                    : 'bg-zinc-900/30 hover:border-zinc-800'
+                            }`}
+                        >
+                            <div className="flex items-center gap-1.5 overflow-hidden">
+                                {p.required && <span className="w-1.5 h-1.5 rounded-full bg-pink-500 shrink-0 animate-pulse" title="Required parameter" />}
+                                <span className={`text-[10px] font-mono leading-tight truncate ${p.required ? 'text-pink-200 font-semibold' : 'text-pink-300/80'}`}>{p.key}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                                <span className="text-[9px] text-zinc-650">{p.type}</span>
+                                {isMapped && (
+                                    <LinkIcon size={8} className="text-green-400" title={`Mapped to CPT: ${data.storage.fieldMapping[p.key]}`} />
+                                )}
+                            </div>
+                        </div>
+                    );
+                })}
                 
                 {(hasStorage || hasLogic) && (
                     <div className="mt-2 pt-2 border-t border-zinc-800/50 space-y-1.5">
                         {isETL && (
-                             <div className="flex items-center gap-2 text-[9px] text-purple-400 bg-purple-900/10 p-1.5 rounded border border-purple-900/20">
+                             <div className="flex items-center gap-2 text-[9px] text-purple-400 bg-purple-900/10 p-1.5 rounded border border-purple-900/20 font-medium">
                                 <Workflow size={10} className="shrink-0" />
                                 <span className="font-bold tracking-wide">ETL PIPELINE</span>
                              </div>
@@ -88,7 +132,7 @@ const EndpointNode = React.memo(({ id, data, x, y, onDragStart, onSelect, onCont
                             </div>
                         )}
                         {hasLogic && !isETL && (
-                            <div className="flex items-center gap-2 text-[9px] text-indigo-400 bg-indigo-900/10 p-1.5 rounded border border-indigo-900/20">
+                            <div className="flex items-center gap-2 text-[9px] text-indigo-400 bg-indigo-900/10 p-1.5 rounded border border-indigo-900/20 font-medium">
                                 <Code size={10} className="shrink-0" />
                                 <span className="font-bold tracking-wide">CUSTOM LOGIC</span>
                             </div>
@@ -100,51 +144,131 @@ const EndpointNode = React.memo(({ id, data, x, y, onDragStart, onSelect, onCont
     );
 });
 
-const CPTNode = React.memo(({ id, data, x, y, onDragStart, onSelect, onContextMenu, onStartConnection, onEndConnection }: any) => {
+const CPTNode = React.memo(({ 
+    id, 
+    data, 
+    x, 
+    y, 
+    onDragStart, 
+    onSelect, 
+    onContextMenu, 
+    onStartConnection, 
+    onEndConnection,
+    connectedEndpoints,
+    hoveredEndpointId,
+    onHover,
+    customEndpoints
+}: any) => {
+    const isConnectedToHoveredEndpoint = useMemo(() => {
+        if (!hoveredEndpointId) return false;
+        const hoveredEp = customEndpoints?.find((e: any) => e.id === hoveredEndpointId);
+        return hoveredEp?.storage?.enabled && hoveredEp.storage.targetCptSlug === data.slug;
+    }, [hoveredEndpointId, data.slug, customEndpoints]);
+
+    const cptEndpoints = useMemo(() => {
+        return (connectedEndpoints || []).filter((ep: any) => ep.storage?.enabled && ep.storage.targetCptSlug === data.slug);
+    }, [connectedEndpoints, data.slug]);
+
     return (
         <div
-            className="absolute w-[280px] bg-[#121214] rounded-lg shadow-2xl border border-zinc-800 group hover:border-indigo-500/50 transition-colors duration-200 select-none"
+            id={`node-cpt-${id}`}
+            className={`absolute w-[280px] bg-[#121214] rounded-lg shadow-2xl border transition-all duration-300 select-none ${
+                isConnectedToHoveredEndpoint 
+                    ? 'border-indigo-500 shadow-indigo-500/20 scale-[1.03] z-40 ring-1 ring-indigo-400' 
+                    : 'border-zinc-800 hover:border-indigo-500/50'
+            }`}
             style={{ left: x, top: y }}
             onMouseDown={(e) => onDragStart(e, 'postType', id)}
             onDoubleClick={(e) => { e.stopPropagation(); onSelect('postType', id); }}
             onContextMenu={(e) => onContextMenu(e, 'postType', id)}
+            onMouseEnter={() => onHover && onHover(id)}
+            onMouseLeave={() => onHover && onHover(null)}
         >
             <NodePort type="postType" id={id} portType="target" style={{ top: 24 }} onStartConnection={onStartConnection} onEndConnection={onEndConnection} />
             <NodePort type="postType" id={id} portType="source" style={{ top: 24 }} onStartConnection={onStartConnection} onEndConnection={onEndConnection} />
 
             <div className="px-3 py-2 bg-zinc-900/50 border-b border-zinc-800 flex items-center justify-between rounded-t-lg">
                 <div className="flex items-center gap-2">
-                        <Table size={12} className="text-indigo-500" />
-                        <span className="text-xs font-bold text-zinc-100">{data.singularName}</span>
+                    <Table size={12} className="text-indigo-500" />
+                    <span className="text-xs font-bold text-zinc-100">{data.singularName}</span>
                 </div>
                 <span className="text-[9px] text-zinc-600 font-mono">{data.slug}</span>
             </div>
 
             <div className="p-0">
-                    <div className="px-3 py-1.5 border-b border-zinc-800/50 flex justify-between items-center bg-zinc-900/20">
-                        <div className="flex items-center gap-2">
-                            <Key size={10} className="text-yellow-600" />
-                            <span className="text-[10px] text-zinc-500 font-mono">ID</span>
-                        </div>
-                        <span className="text-[9px] text-zinc-700">int</span>
+                <div className="px-3 py-1.5 border-b border-zinc-800/50 flex justify-between items-center bg-zinc-900/20">
+                    <div className="flex items-center gap-2">
+                        <Key size={10} className="text-yellow-600" />
+                        <span className="text-[10px] text-zinc-500 font-mono">ID</span>
                     </div>
+                    <span className="text-[9px] text-zinc-650 font-mono">int</span>
+                </div>
 
-                    <div className="max-h-[200px] overflow-hidden relative">
-                        {data.metaFields.slice(0, 6).map((mf: any) => (
-                            <div key={mf.id} className="px-3 py-1.5 border-b border-zinc-800/30 flex justify-between items-center hover:bg-zinc-800/30 transition-colors">
-                                <div className="flex items-center gap-2">
-                                    {mf.type === FieldType.RELATIONSHIP ? <LinkIcon size={10} className="text-indigo-500"/> : <List size={10} className="text-zinc-700"/>}
-                                    <span className={`text-[10px] font-mono ${mf.type === FieldType.RELATIONSHIP ? 'text-indigo-300' : 'text-zinc-400'}`}>{mf.key}</span>
+                <div className="max-h-[300px] overflow-hidden relative">
+                    {data.metaFields.slice(0, 10).map((mf: any) => {
+                        // Find connected endpoint mapping parameters
+                        const requiringEndpoints = cptEndpoints.filter((ep: any) => {
+                            const mappingEntry = Object.entries(ep.storage?.fieldMapping || {}).find(([paramKey, metaKey]) => metaKey === mf.key);
+                            if (!mappingEntry) return false;
+                            const paramKey = mappingEntry[0];
+                            const param = ep.parameters?.find((p: any) => p.key === paramKey);
+                            return param?.required === true;
+                        });
+
+                        const isRequiredByAny = requiringEndpoints.length > 0;
+                        const isHoveredEpRequiring = requiringEndpoints.some((ep: any) => ep.id === hoveredEndpointId);
+
+                        return (
+                            <div 
+                                key={mf.id} 
+                                className={`px-3 py-1.5 border-b border-zinc-800/30 flex justify-between items-center transition-all duration-200 ${
+                                    isHoveredEpRequiring 
+                                        ? 'bg-pink-500/10 border-l-2 border-pink-500' 
+                                        : isRequiredByAny 
+                                            ? 'bg-amber-500/5 border-l border-amber-500/40' 
+                                            : 'hover:bg-zinc-850/40 bg-transparent'
+                                }`}
+                            >
+                                <div className="flex items-center gap-2 overflow-hidden mr-1">
+                                    {mf.type === FieldType.RELATIONSHIP ? <LinkIcon size={10} className="text-indigo-500 shrink-0"/> : <List size={10} className="text-zinc-600 shrink-0"/>}
+                                    <span className={`text-[10px] font-mono truncate ${
+                                        isHoveredEpRequiring 
+                                            ? 'text-pink-300 font-bold' 
+                                            : isRequiredByAny 
+                                                ? 'text-amber-200 font-medium' 
+                                                : mf.type === FieldType.RELATIONSHIP 
+                                                    ? 'text-indigo-300' 
+                                                    : 'text-zinc-400'
+                                    }`}>
+                                        {mf.key}
+                                    </span>
                                 </div>
-                                <span className="text-[9px] text-zinc-600">{mf.type}</span>
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                    {/* Mapped endpoint required badges */}
+                                    {requiringEndpoints.map((ep: any) => (
+                                        <span 
+                                            key={ep.id} 
+                                            className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                                                ep.id === hoveredEndpointId 
+                                                    ? 'bg-pink-500 text-black font-extrabold animate-pulse' 
+                                                    : 'bg-amber-500/15 text-amber-500 border border-amber-500/30'
+                                            }`}
+                                            title={`Required parameter of connected endpoint: ${ep.method} ${ep.route}`}
+                                        >
+                                            {ep.id === hoveredEndpointId ? 'REQ ENDPOINT' : 'REQ'}
+                                        </span>
+                                    ))}
+                                    <span className="text-[9px] text-zinc-550">{mf.type}</span>
+                                </div>
                             </div>
-                        ))}
-                        {data.metaFields.length > 6 && (
-                            <div className="px-3 py-1 text-[9px] text-zinc-600 bg-zinc-900/20 italic">
-                                + {data.metaFields.length - 6} more fields...
-                            </div>
-                        )}
-                    </div>
+                        );
+                    })}
+                    {data.metaFields.length > 10 && (
+                        <div className="px-3 py-1 text-[9px] text-zinc-500 bg-zinc-900/20 italic">
+                            + {data.metaFields.length - 10} more fields...
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -294,6 +418,9 @@ export const FlowDesigner: React.FC<FlowDesignerProps> = ({ project, onSelect, o
   });
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({ visible: false, x: 0, y: 0, type: null, id: null });
+
+  const [hoveredEndpointId, setHoveredEndpointId] = useState<string | null>(null);
+  const [hoveredCptId, setHoveredCptId] = useState<string | null>(null);
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -528,6 +655,7 @@ export const FlowDesigner: React.FC<FlowDesignerProps> = ({ project, onSelect, o
   }, []);
 
   // Render Connections
+  // Render Connections
   const connections = useMemo(() => {
     const lines: React.ReactElement[] = [];
 
@@ -542,18 +670,19 @@ export const FlowDesigner: React.FC<FlowDesignerProps> = ({ project, onSelect, o
         if (targetCpt && nodePositions[targetCpt.id]) {
            const targetPos = nodePositions[targetCpt.id];
            const targetLeft = { x: targetPos.x, y: targetPos.y + 30 };
+           const isActive = ep.id === hoveredEndpointId || targetCpt.id === hoveredCptId;
            
            lines.push(
              <g key={`link_${ep.id}_${targetCpt.id}`}>
                <path 
                  d={getBezierPath(epRight.x, epRight.y, targetLeft.x, targetLeft.y)}
                  fill="none"
-                 stroke="#10b981" 
-                 strokeWidth="2"
-                 className="opacity-60"
+                 stroke={isActive ? "#ec4899" : "#10b981"} 
+                 strokeWidth={isActive ? "3" : "2"}
+                 className={isActive ? "opacity-100" : "opacity-60"}
                />
-               <circle cx={epRight.x} cy={epRight.y} r="2" fill="#10b981" />
-               <circle cx={targetLeft.x} cy={targetLeft.y} r="2" fill="#10b981" />
+               <circle cx={epRight.x} cy={epRight.y} r={isActive ? "4" : "2.5"} fill={isActive ? "#ec4899" : "#10b981"} />
+               <circle cx={targetLeft.x} cy={targetLeft.y} r={isActive ? "4" : "2.5"} fill={isActive ? "#ec4899" : "#10b981"} />
              </g>
            );
         }
@@ -573,18 +702,19 @@ export const FlowDesigner: React.FC<FlowDesignerProps> = ({ project, onSelect, o
                     const fieldY = startPos.y + 76 + (idx * 29) + 14; 
                     const startRight = { x: startPos.x + 280, y: fieldY };
                     const targetLeft = { x: targetPos.x, y: targetPos.y + 30 };
+                    const isCptHovered = pt.id === hoveredCptId || targetCpt.id === hoveredCptId;
 
                     lines.push(
                         <g key={`rel_${pt.id}_${targetCpt.id}_${field.id}`}>
                             <path 
                                 d={getBezierPath(startRight.x, startRight.y, targetLeft.x, targetLeft.y)}
                                 fill="none"
-                                stroke="#6366f1" 
-                                strokeWidth="2"
+                                stroke={isCptHovered ? "#818cf8" : "#6366f1"} 
+                                strokeWidth={isCptHovered ? "2.5" : "2"}
                                 strokeDasharray="5,5"
-                                className="opacity-50"
+                                className={isCptHovered ? "opacity-80" : "opacity-50"}
                             />
-                            <circle cx={startRight.x} cy={startRight.y} r="2" fill="#6366f1" />
+                            <circle cx={startRight.x} cy={startRight.y} r="2" fill={isCptHovered ? "#818cf8" : "#6366f1"} />
                         </g>
                     );
                 }
@@ -603,16 +733,17 @@ export const FlowDesigner: React.FC<FlowDesignerProps> = ({ project, onSelect, o
             if (cpt && nodePositions[cpt.id]) {
                 const cptPos = nodePositions[cpt.id];
                 const cptRight = { x: cptPos.x + 280, y: cptPos.y + 30 };
+                const isCptHovered = cpt.id === hoveredCptId;
                 
                 lines.push(
                      <g key={`tax_${tax.id}_${cpt.id}`}>
                         <path 
                             d={getBezierPath(cptRight.x, cptRight.y, taxLeft.x, taxLeft.y)}
                             fill="none"
-                            stroke="#ec4899" 
-                            strokeWidth="1"
+                            stroke={isCptHovered ? "#f472b6" : "#ec4899"} 
+                            strokeWidth={isCptHovered ? "1.5" : "1"}
                             strokeDasharray="2,2"
-                            className="opacity-30"
+                            className={isCptHovered ? "opacity-60" : "opacity-30"}
                         />
                     </g>
                 );
@@ -621,7 +752,7 @@ export const FlowDesigner: React.FC<FlowDesignerProps> = ({ project, onSelect, o
     });
 
     return lines;
-  }, [project, nodePositions]);
+  }, [project, nodePositions, hoveredEndpointId, hoveredCptId]);
 
   return (
     <div 
@@ -703,6 +834,9 @@ export const FlowDesigner: React.FC<FlowDesignerProps> = ({ project, onSelect, o
                     onContextMenu={handleContextMenu}
                     onStartConnection={handleStartConnection}
                     onEndConnection={handleEndConnection}
+                    hoveredCptId={hoveredCptId}
+                    onHover={setHoveredEndpointId}
+                    postTypes={postTypes}
                 />
             ))}
             {postTypes.map(pt => (
@@ -717,6 +851,10 @@ export const FlowDesigner: React.FC<FlowDesignerProps> = ({ project, onSelect, o
                     onContextMenu={handleContextMenu}
                     onStartConnection={handleStartConnection}
                     onEndConnection={handleEndConnection}
+                    connectedEndpoints={customEndpoints}
+                    hoveredEndpointId={hoveredEndpointId}
+                    onHover={setHoveredCptId}
+                    customEndpoints={customEndpoints}
                 />
             ))}
             {taxonomies.map(tax => (

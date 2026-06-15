@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ProjectState } from '../types';
 import { generateOpenAPI, generatePHP, generatePackageJSON, generateComposerJSON, generatePlaygroundBlueprint } from '../services/wpGenerator';
 import { generateSeederPHP } from '../services/dataGenerator';
-import { Copy, Check, FileCode, FileJson, Package, PlayCircle, Database, ExternalLink, Globe } from 'lucide-react';
+import { Copy, Check, FileCode, FileJson, Package, PlayCircle, Database, ExternalLink, Globe, Download } from 'lucide-react';
+import { exportProjectToZip } from '../utils/pluginZipExporter';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-json';
 import 'prismjs/components/prism-markup';
@@ -112,6 +113,14 @@ export const CodePreview: React.FC<CodePreviewProps> = ({ project, initialTab = 
           ))}
         </div>
         <div className="flex gap-2">
+           <button
+             onClick={() => exportProjectToZip(project)}
+             className="flex items-center gap-1.5 text-xs text-indigo-300 bg-indigo-950/40 hover:bg-indigo-900/40 border border-indigo-500/30 hover:border-indigo-500/50 px-3 py-1.5 rounded transition-all font-medium"
+             title="Download full plugin source code as a ZIP archive"
+           >
+             <Download size={14} className="text-indigo-400" />
+             Export Plugin ZIP
+           </button>
            {(tab === 'blueprint' || tab === 'playground') && (
               <button
                 onClick={handlePlaygroundLaunch}
