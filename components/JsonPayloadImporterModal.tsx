@@ -90,39 +90,39 @@ export const JsonPayloadImporterModal: React.FC<JsonPayloadImporterModalProps> =
     <div className="fixed inset-0 z-[220] flex items-center justify-center p-4 animate-in fade-in duration-150">
       <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={onClose} />
       
-      <div className="bg-[#18181b] border border-zinc-700/80 rounded-2xl w-full max-w-3xl shadow-2xl relative flex flex-col max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-150">
+      <div className="bg-white dark:bg-[#18181b] border border-slate-200 dark:border-zinc-700/80 rounded-2xl w-full max-w-3xl shadow-2xl relative flex flex-col max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-150 text-slate-900 dark:text-zinc-100">
         
         {/* Modal Header */}
-        <div className="p-5 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/70">
+        <div className="p-5 border-b border-slate-200 dark:border-zinc-800 flex justify-between items-center bg-slate-50 dark:bg-zinc-900/70">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-pink-500/20 border border-pink-500/30 flex items-center justify-center text-pink-400">
+            <div className="w-9 h-9 rounded-xl bg-pink-500/10 dark:bg-pink-500/20 border border-pink-500/30 flex items-center justify-center text-pink-600 dark:text-pink-400">
               <Sparkles size={18} />
             </div>
             <div>
-              <h3 className="font-bold text-base text-white tracking-tight">Smart JSON Body & Schema Importer</h3>
-              <p className="text-xs text-zinc-400">Paste sample JSON request payload to auto-derive typed REST parameters & validation schemas</p>
+              <h3 className="font-bold text-base text-slate-900 dark:text-white tracking-tight">Smart JSON Body & Schema Importer</h3>
+              <p className="text-xs text-slate-500 dark:text-zinc-400">Paste sample JSON request payload to auto-derive typed REST parameters & validation schemas</p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Modal Content */}
-        <div className="p-6 overflow-y-auto space-y-5 custom-scrollbar flex-1">
+        <div className="p-6 overflow-y-auto space-y-5 custom-scrollbar flex-1 bg-slate-50/40 dark:bg-transparent">
           <div>
             <div className="flex justify-between items-center mb-2">
-              <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Code2 size={13} className="text-pink-400" />
+              <label className="text-xs font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Code2 size={13} className="text-pink-500" />
                 <span>JSON Request Body Sample</span>
               </label>
               <button
                 type="button"
                 onClick={handleAnalyze}
-                className="text-xs font-semibold text-pink-400 hover:text-pink-300 bg-pink-950/60 hover:bg-pink-900/80 border border-pink-800/60 px-2.5 py-1 rounded transition-colors"
+                className="text-xs font-semibold text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 bg-pink-50 dark:bg-pink-950/60 hover:bg-pink-100 dark:hover:bg-pink-900/80 border border-pink-200 dark:border-pink-800/60 px-2.5 py-1 rounded transition-colors"
               >
                 Analyze Schema
               </button>
@@ -135,7 +135,7 @@ export const JsonPayloadImporterModal: React.FC<JsonPayloadImporterModalProps> =
                 if (error) setError(null);
               }}
               rows={8}
-              className="w-full bg-[#121214] border border-zinc-700/80 rounded-xl p-3 font-mono text-xs text-pink-200 focus:border-pink-500 focus:outline-none custom-scrollbar leading-relaxed"
+              className="w-full bg-slate-50 dark:bg-[#121214] border border-slate-300 dark:border-zinc-700/80 rounded-xl p-3 font-mono text-xs text-slate-800 dark:text-pink-200 focus:border-pink-500 focus:outline-none custom-scrollbar leading-relaxed"
               placeholder='{ "key": "value" }'
             />
 
@@ -150,14 +150,14 @@ export const JsonPayloadImporterModal: React.FC<JsonPayloadImporterModalProps> =
           {/* Inferred Schema Preview */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+              <span className="text-xs font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-wider">
                 Inferred REST Parameters {parsedParams.length > 0 && `(${parsedParams.length})`}
               </span>
               {parsedParams.length === 0 && (
                 <button
                   type="button"
                   onClick={handleAnalyze}
-                  className="text-xs text-zinc-500 hover:text-zinc-300 underline"
+                  className="text-xs text-slate-500 dark:text-zinc-500 hover:text-slate-800 dark:hover:text-zinc-300 underline"
                 >
                   Click 'Analyze Schema' to parse
                 </button>
@@ -169,31 +169,31 @@ export const JsonPayloadImporterModal: React.FC<JsonPayloadImporterModalProps> =
                 {parsedParams.map((p, idx) => (
                   <div 
                     key={idx} 
-                    className="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between"
+                    className="p-2.5 rounded-xl bg-white dark:bg-zinc-900/80 border border-slate-200 dark:border-zinc-800 flex items-center justify-between shadow-xs"
                   >
                     <div className="min-w-0 pr-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono font-bold text-pink-300 truncate">{p.key}</span>
+                        <span className="text-xs font-mono font-bold text-pink-600 dark:text-pink-300 truncate">{p.key}</span>
                         <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded font-bold uppercase ${
-                          p.type === 'integer' || p.type === 'number' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
-                          p.type === 'boolean' ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' :
-                          p.type === 'array' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
-                          p.type === 'object' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' :
-                          p.type === 'email' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' :
-                          p.type === 'url' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
-                          'bg-zinc-800 text-zinc-300 border border-zinc-700'
+                          p.type === 'integer' || p.type === 'number' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30' :
+                          p.type === 'boolean' ? 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-500/30' :
+                          p.type === 'array' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30' :
+                          p.type === 'object' ? 'bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/30' :
+                          p.type === 'email' ? 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30' :
+                          p.type === 'url' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30' :
+                          'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-300 dark:border-zinc-700'
                         }`}>
                           {p.type}
                         </span>
                       </div>
-                      <p className="text-[10px] text-zinc-500 truncate mt-0.5">{p.description}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-zinc-500 truncate mt-0.5">{p.description}</p>
                     </div>
-                    <span className="text-[10px] text-zinc-500 font-mono bg-zinc-950 px-1.5 py-0.5 rounded shrink-0">required</span>
+                    <span className="text-[10px] text-slate-500 dark:text-zinc-500 font-mono bg-slate-100 dark:bg-zinc-950 px-1.5 py-0.5 rounded shrink-0">required</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="p-4 rounded-xl bg-zinc-900/30 border border-dashed border-zinc-800 text-center text-xs text-zinc-500">
+              <div className="p-4 rounded-xl bg-slate-100/60 dark:bg-zinc-900/30 border border-dashed border-slate-300 dark:border-zinc-800 text-center text-xs text-slate-500 dark:text-zinc-500">
                 Paste JSON payload above and click Analyze to review parameters before importing.
               </div>
             )}
@@ -202,11 +202,11 @@ export const JsonPayloadImporterModal: React.FC<JsonPayloadImporterModalProps> =
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 border-t border-zinc-800 flex justify-between items-center bg-zinc-900/60">
+        <div className="p-4 border-t border-slate-200 dark:border-zinc-800 flex justify-between items-center bg-slate-50 dark:bg-zinc-900/60">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition-colors"
+            className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-200 dark:hover:bg-zinc-800 transition-colors"
           >
             Cancel
           </button>
@@ -214,7 +214,7 @@ export const JsonPayloadImporterModal: React.FC<JsonPayloadImporterModalProps> =
             <button
               type="button"
               onClick={handleAnalyze}
-              className="px-3.5 py-2 text-xs font-semibold text-zinc-300 hover:text-white rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors"
+              className="px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white rounded-lg bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 transition-colors"
             >
               Re-Analyze
             </button>

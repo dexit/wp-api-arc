@@ -26,7 +26,7 @@ code[class*="language-"], pre[class*="language-"] {
   text-shadow: none !important;
 }
 
-/* Prism PHP Syntax Tokens */
+/* Dark Mode Prism Syntax Tokens (Default) */
 .token.comment,
 .token.prolog,
 .token.doctype,
@@ -55,7 +55,7 @@ code[class*="language-"], pre[class*="language-"] {
 .token.char,
 .token.builtin,
 .token.inserted {
-  color: #10b981 !important; /* emerald green */
+  color: #10b981 !important; /* emerald */
 }
 
 .token.operator,
@@ -63,7 +63,7 @@ code[class*="language-"], pre[class*="language-"] {
 .token.url,
 .language-css .token.string,
 .style .token.string {
-  color: #38bdf8 !important; /* sky blue */
+  color: #38bdf8 !important; /* sky */
 }
 
 .token.atrule,
@@ -81,8 +81,49 @@ code[class*="language-"], pre[class*="language-"] {
 .token.regex,
 .token.important,
 .token.variable {
-  color: #f43f5e !important; /* rose / pink for PHP $vars */
-  font-weight: 500;
+  color: #f43f5e !important; /* rose */
+  font-weight: 600;
+}
+
+/* Light Theme overrides for code highlights if within light container */
+html:not(.dark) .light-code-theme .token.comment,
+html:not(.dark) .light-code-theme .token.prolog,
+html:not(.dark) .light-code-theme .token.doctype,
+html:not(.dark) .light-code-theme .token.cdata {
+  color: #64748b !important; /* slate-500 */
+}
+
+html:not(.dark) .light-code-theme .token.punctuation {
+  color: #475569 !important; /* slate-600 */
+}
+
+html:not(.dark) .light-code-theme .token.property,
+html:not(.dark) .light-code-theme .token.tag,
+html:not(.dark) .light-code-theme .token.boolean,
+html:not(.dark) .light-code-theme .token.number,
+html:not(.dark) .light-code-theme .token.constant {
+  color: #d97706 !important; /* amber-600 */
+}
+
+html:not(.dark) .light-code-theme .token.string,
+html:not(.dark) .light-code-theme .token.char,
+html:not(.dark) .light-code-theme .token.builtin {
+  color: #059669 !important; /* emerald-600 */
+}
+
+html:not(.dark) .light-code-theme .token.keyword {
+  color: #7c3aed !important; /* violet-600 */
+  font-weight: 600;
+}
+
+html:not(.dark) .light-code-theme .token.function {
+  color: #2563eb !important; /* blue-600 */
+  font-weight: 600;
+}
+
+html:not(.dark) .light-code-theme .token.variable {
+  color: #e11d48 !important; /* rose-600 */
+  font-weight: 600;
 }
 
 .token.important,

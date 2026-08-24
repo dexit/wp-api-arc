@@ -1,5 +1,5 @@
-import React from 'react';
-import { ProjectState, ResourceType, ViewMode } from '../types';
+import React, { useState } from 'react';
+import { ProjectState, ResourceType, ViewMode, CustomPostType, CustomEndpoint, Taxonomy } from '../types';
 import { 
   Box, 
   Code, 
@@ -15,7 +15,9 @@ import {
   Braces,
   Globe,
   Sun,
-  Moon
+  Moon,
+  Activity,
+  GripVertical
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -32,6 +34,10 @@ interface SidebarProps {
   onAddTaxonomy: () => void;
   onToggleTerminal: () => void;
   onOpenAI: () => void;
+  onOpenAnalysis?: () => void;
+  onReorderPostTypes?: (newPostTypes: CustomPostType[]) => void;
+  onReorderEndpoints?: (newEndpoints: CustomEndpoint[]) => void;
+  onReorderTaxonomies?: (newTaxonomies: Taxonomy[]) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -47,9 +53,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onAddEndpoint,
   onAddTaxonomy,
   onToggleTerminal,
-  onOpenAI
+  onOpenAI,
+  onOpenAnalysis,
+  onReorderPostTypes,
+  onReorderEndpoints,
+  onReorderTaxonomies
 }) => {
   const [isCollapsed, setIsCollapsed] = React.useState(false);
+  const [draggedItem, setDraggedItem] = useState<{ type: 'postType' | 'endpoint' | 'taxonomy'; index: number } | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   
   const SectionHeader: React.FC<{ label: string }> = ({ label }) => (
     <div className={`px-4 mt-6 mb-2 text-[10px] font-bold text-slate-500 dark:text-zinc-500 uppercase tracking-widest ${isCollapsed ? 'hidden' : 'block'}`}>{label}</div>
@@ -86,6 +98,125 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
     </button>
   );
+
+  const DraggableNavItem: React.FC<{
+    active: boolean;
+    onClick: () => void;
+    icon: any;
+    label: string;
+    subLabel?: string;
+    type: 'postType' | 'endpoint' | 'taxonomy';
+    index: number;
+  }> = ({
+    active,
+    onClick,
+    icon: Icon,
+    label,
+    subLabel,
+    type,
+    index
+  }) => {
+    const isDraggingThis = draggedItem?.type === type && draggedItem?.index === index;
+    const isDragTarget = draggedItem?.type === type && dragOverIndex === index && draggedItem?.index !== index;
+
+    const handleDragStart = (e: React.DragEvent) => {
+      setDraggedItem({ type, index });
+      e.dataTransfer.setData('text/plain', `${type}:${index}`);
+      e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+      if (draggedItem?.type === type) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (dragOverIndex !== index) {
+          setDragOverIndex(index);
+        }
+      }
+    };
+
+    const handleDragLeave = () => {
+      if (dragOverIndex === index) {
+        setDragOverIndex(null);
+      }
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+      e.preventDefault();
+      if (draggedItem && draggedItem.type === type && draggedItem.index !== index) {
+        const fromIndex = draggedItem.index;
+        const toIndex = index;
+
+        if (type === 'postType' && onReorderPostTypes) {
+          const updated = [...project.postTypes];
+          const [moved] = updated.splice(fromIndex, 1);
+          updated.splice(toIndex, 0, moved);
+          onReorderPostTypes(updated);
+        } else if (type === 'endpoint' && onReorderEndpoints) {
+          const updated = [...project.customEndpoints];
+          const [moved] = updated.splice(fromIndex, 1);
+          updated.splice(toIndex, 0, moved);
+          onReorderEndpoints(updated);
+        } else if (type === 'taxonomy' && onReorderTaxonomies) {
+          const updated = [...project.taxonomies];
+          const [moved] = updated.splice(fromIndex, 1);
+          updated.splice(toIndex, 0, moved);
+          onReorderTaxonomies(updated);
+        }
+      }
+      setDraggedItem(null);
+      setDragOverIndex(null);
+    };
+
+    const handleDragEnd = () => {
+      setDraggedItem(null);
+      setDragOverIndex(null);
+    };
+
+    return (
+      <div
+        draggable
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onDragEnd={handleDragEnd}
+        className={`relative mx-2 rounded-md transition-all flex items-center group ${
+          isDraggingThis ? 'opacity-40 scale-95 border border-dashed border-indigo-500' : ''
+        } ${
+          isDragTarget ? 'border-t-2 border-indigo-500 pt-0.5' : ''
+        }`}
+      >
+        <button
+          onClick={onClick}
+          title={label}
+          className={`flex-1 text-left py-1.5 rounded-md flex items-center justify-center transition-all ${
+            active 
+              ? 'bg-slate-200 dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm font-semibold' 
+              : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-200/60 dark:hover:bg-zinc-900 hover:text-slate-900 dark:hover:text-zinc-200'
+          } ${isCollapsed ? 'w-10 px-0' : 'px-2.5 gap-2.5'}`}
+        >
+          {/* Drag Handle Grip */}
+          {!isCollapsed && (
+            <span 
+              className="cursor-grab active:cursor-grabbing text-slate-400 dark:text-zinc-600 group-hover:text-slate-600 dark:group-hover:text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 -ml-1"
+              title="Drag to prioritize or reorder"
+            >
+              <GripVertical size={13} />
+            </span>
+          )}
+
+          <Icon size={16} className={`${active ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-400 shrink-0'}`} />
+          {!isCollapsed && (
+            <div className="flex flex-col leading-none overflow-hidden text-ellipsis whitespace-nowrap flex-1 min-w-0">
+              <span className="text-sm truncate">{label}</span>
+              {subLabel && <span className="text-[10px] text-slate-500 dark:text-zinc-500 mt-0.5 font-mono truncate">{subLabel}</span>}
+            </div>
+          )}
+        </button>
+      </div>
+    );
+  };
 
   const AddButton = ({ onClick, label }: { onClick: () => void, label: string }) => {
     if (isCollapsed) return null;
@@ -146,14 +277,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         <SectionHeader label="Content Models" />
         <div className="space-y-0.5">
-          {project.postTypes.map(pt => (
-            <NavItem 
+          {project.postTypes.map((pt, idx) => (
+            <DraggableNavItem 
               key={pt.id}
               active={selection.id === pt.id && selection.type === 'postType'} 
               onClick={() => onSelect('postType', pt.id)} 
               icon={Box} 
               label={pt.pluralName}
               subLabel={pt.slug}
+              type="postType"
+              index={idx}
             />
           ))}
           <AddButton onClick={onAddResource} label="New Model" />
@@ -161,14 +294,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         <SectionHeader label="Endpoints" />
         <div className="space-y-0.5">
-          {project.customEndpoints.map(ep => (
-            <NavItem 
+          {project.customEndpoints.map((ep, idx) => (
+            <DraggableNavItem 
               key={ep.id}
               active={selection.id === ep.id && selection.type === 'endpoint'} 
               onClick={() => onSelect('endpoint', ep.id)} 
               icon={Network} 
               label={ep.route}
               subLabel={ep.method}
+              type="endpoint"
+              index={idx}
             />
           ))}
           <AddButton onClick={onAddEndpoint} label="New Route" />
@@ -176,32 +311,57 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         <SectionHeader label="Taxonomies" />
         <div className="space-y-0.5">
-           {project.taxonomies.map(tax => (
-             <NavItem
+           {project.taxonomies.map((tax, idx) => (
+             <DraggableNavItem
                key={tax.id}
                active={selection.id === tax.id && selection.type === 'taxonomy'}
                onClick={() => onSelect('taxonomy', tax.id)}
                icon={Tag}
                label={tax.pluralName}
+               type="taxonomy"
+               index={idx}
              />
            ))}
            <AddButton onClick={onAddTaxonomy} label="New Taxonomy" />
         </div>
 
-        <SectionHeader label="Build" />
+        <SectionHeader label="Build & Optimize" />
         <NavItem active={currentView === 'openapi'} onClick={() => onViewChange('openapi')} icon={FileJson} label="OpenAPI Spec" />
         <NavItem active={currentView === 'php'} onClick={() => onViewChange('php')} icon={Code} label="Code Export" />
         <NavItem active={currentView === 'playground'} onClick={() => onViewChange('playground')} icon={Globe} label="Live Playground" />
+        {onOpenAnalysis && (
+          <button
+            type="button"
+            onClick={onOpenAnalysis}
+            title="Static API & DB Indexing Analysis"
+            className={`text-left py-1.5 mx-2 rounded-md flex items-center justify-center transition-all group text-slate-600 dark:text-zinc-400 hover:bg-slate-200/60 dark:hover:bg-zinc-900 hover:text-indigo-600 dark:hover:text-indigo-400 ${
+              isCollapsed ? 'w-10 px-0' : 'w-[calc(100%-16px)] px-3 gap-3'
+            }`}
+          >
+            <Activity size={16} className="text-emerald-500 shrink-0 group-hover:scale-110 transition-transform" />
+            {!isCollapsed && (
+              <div className="flex flex-col leading-none overflow-hidden text-ellipsis whitespace-nowrap">
+                <span className="text-sm font-semibold flex items-center gap-1.5">
+                  Static Analysis
+                  <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-mono font-bold">
+                    Opt
+                  </span>
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-zinc-500 mt-0.5 font-mono truncate">Caching & Indexing</span>
+              </div>
+            )}
+          </button>
+        )}
         <NavItem active={currentView === 'settings'} onClick={() => onViewChange('settings')} icon={SettingsIcon} label="Settings" />
 
       </div>
 
       {/* Footer Controls */}
-      <div className="p-3 border-t border-zinc-800 bg-[#0e0e11] space-y-2">
+      <div className="p-3 border-t border-slate-200 dark:border-zinc-800 bg-slate-100/70 dark:bg-[#0e0e11] space-y-2">
         <button
           onClick={onToggleTheme}
           title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          className="w-full py-2 px-3 rounded-md flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all border border-transparent hover:border-zinc-700"
+          className="w-full py-2 px-3 rounded-md flex items-center justify-center text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-zinc-800 transition-all border border-transparent hover:border-slate-300 dark:hover:border-zinc-700"
         >
           {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
           {!isCollapsed && <span className="ml-2 text-xs">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
@@ -212,8 +372,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           title={isTerminalOpen ? 'Hide Console' : 'Show Console'}
           className={`w-full py-2 px-3 rounded-md flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'} text-xs font-mono transition-all border ${
             isTerminalOpen 
-              ? 'bg-zinc-800 text-green-400 border-zinc-700' 
-              : 'text-zinc-500 border-transparent hover:bg-zinc-800/50'
+              ? 'bg-slate-200 dark:bg-zinc-800 text-emerald-600 dark:text-green-400 border-slate-300 dark:border-zinc-700' 
+              : 'text-slate-500 dark:text-zinc-500 border-transparent hover:bg-slate-200/60 dark:hover:bg-zinc-800/50'
           }`}
         >
           <TerminalIcon size={14} className="shrink-0" /> 

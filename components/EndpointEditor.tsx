@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import { CodeEditor } from './CodeEditor';
 import { SnippetLibraryModal } from './SnippetLibraryModal';
+import { QuickSnippetPopup } from './QuickSnippetPopup';
 import { JsonPayloadImporterModal } from './JsonPayloadImporterModal';
 import Editor from 'react-simple-code-editor';
 import Prism from 'prismjs';
@@ -795,14 +796,17 @@ export const EndpointEditor: React.FC<EndpointEditorProps> = ({
                               <Code size={12} className="text-indigo-400" />
                               <span>Pre-Callback PHP Logic ($request context available)</span>
                             </label>
-                            <button
-                              type="button"
-                              onClick={() => setActiveMwSnippetModalId(mw.id)}
-                              className="flex items-center gap-1.5 text-xs font-semibold text-indigo-400 hover:text-indigo-300 bg-indigo-950/60 hover:bg-indigo-900/80 border border-indigo-800/60 px-2.5 py-1 rounded-lg transition-colors shadow-sm"
-                            >
-                              <Sparkles size={12} className="text-amber-300" />
-                              <span>Snippet Boilerplate</span>
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setActiveMwSnippetModalId(mw.id)}
+                                className="flex items-center gap-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 px-2.5 py-1 rounded-lg transition-all shadow-sm"
+                                title="Quick search and insert boilerplate snippets into this middleware"
+                              >
+                                <Sparkles size={12} className="text-amber-300" />
+                                <span>Snippet Selector</span>
+                              </button>
+                            </div>
                           </div>
 
                           <div className="border border-zinc-800 rounded-xl overflow-hidden bg-[#18181c] relative min-h-[160px]">
@@ -1045,9 +1049,9 @@ export const EndpointEditor: React.FC<EndpointEditorProps> = ({
         onImport={handleJsonImport}
       />
 
-      {/* Snippet Library Modal for Middleware */}
+      {/* Quick Snippet Selector Popup for Middleware */}
       {activeMwSnippetModalId && (
-        <SnippetLibraryModal
+        <QuickSnippetPopup
           isOpen={true}
           onClose={() => setActiveMwSnippetModalId(null)}
           onInsert={(snippet) => {
@@ -1059,6 +1063,7 @@ export const EndpointEditor: React.FC<EndpointEditorProps> = ({
             }
           }}
           scope="middleware"
+          title="Middleware Boilerplate Snippet Selector"
         />
       )}
 

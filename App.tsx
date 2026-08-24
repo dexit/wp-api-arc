@@ -13,6 +13,7 @@ import { Terminal } from './components/Terminal';
 import { Sidebar } from './components/Sidebar';
 import { EditorModal } from './components/EditorModal';
 import { GlobalLogicEditor } from './components/GlobalLogicEditor';
+import { StaticAnalysisModal } from './components/StaticAnalysisModal';
 import { logger } from './utils/logger';
 import { LayoutTemplate } from 'lucide-react';
 
@@ -41,6 +42,7 @@ const App = () => {
   });
   const [currentView, setCurrentView] = useState<ViewMode>('flow'); 
   const [isAIModalOpen, setAIModalOpen] = useState(false);
+  const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
   const [settings, setSettings] = useState<AppSettings>(() => {
     const saved = localStorage.getItem('wp_api_architect_settings');
     if (saved) {
@@ -417,6 +419,19 @@ const App = () => {
         onAddTaxonomy={handleAddTaxonomy}
         onToggleTerminal={() => setIsTerminalOpen(!isTerminalOpen)}
         onOpenAI={() => setAIModalOpen(true)}
+        onOpenAnalysis={() => setIsAnalysisModalOpen(true)}
+        onReorderPostTypes={(newPostTypes) => {
+          setProject(prev => ({ ...prev, postTypes: newPostTypes }));
+          logger.info('Reordered Content Models');
+        }}
+        onReorderEndpoints={(newEndpoints) => {
+          setProject(prev => ({ ...prev, customEndpoints: newEndpoints }));
+          logger.info('Reordered Endpoints');
+        }}
+        onReorderTaxonomies={(newTaxonomies) => {
+          setProject(prev => ({ ...prev, taxonomies: newTaxonomies }));
+          logger.info('Reordered Taxonomies');
+        }}
       />
 
       {/* Main Content */}
@@ -428,6 +443,13 @@ const App = () => {
         </div>
         {isTerminalOpen && <Terminal onClose={() => setIsTerminalOpen(false)} />}
       </div>
+
+      {/* Static API Analysis Modal */}
+      <StaticAnalysisModal
+        isOpen={isAnalysisModalOpen}
+        onClose={() => setIsAnalysisModalOpen(false)}
+        project={project}
+      />
 
       {/* Editor Modal Overlay */}
       <EditorModal 

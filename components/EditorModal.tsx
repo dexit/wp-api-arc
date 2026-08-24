@@ -22,28 +22,28 @@ export const EditorModal: React.FC<EditorModalProps> = ({ title, isOpen, onClose
       />
       
       {/* Modal Container */}
-      <div className={`relative bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col transition-all duration-300 ease-out overflow-hidden ${
+      <div className={`relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl flex flex-col transition-all duration-300 ease-out overflow-hidden text-slate-900 dark:text-white ${
         isMaximized ? 'w-full h-full' : 'w-full max-w-6xl h-[85vh]'
       }`}>
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm z-10">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 backdrop-blur-sm z-10">
           <div className="flex items-center gap-3">
             <div className="w-2 h-8 bg-indigo-500 rounded-full" />
-            <h2 className="text-xl font-bold text-white tracking-tight">{title}</h2>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{title}</h2>
           </div>
           
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setIsMaximized(!isMaximized)}
-              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+              className="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
               title={isMaximized ? "Restore" : "Maximize"}
             >
               {isMaximized ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
             </button>
             <button 
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-white hover:bg-red-900/40 rounded-lg transition-colors"
+              className="p-2 text-slate-400 hover:text-red-600 dark:hover:text-white hover:bg-red-50 dark:hover:bg-red-900/40 rounded-lg transition-colors"
               title="Close"
             >
               <X size={20} />
@@ -52,12 +52,12 @@ export const EditorModal: React.FC<EditorModalProps> = ({ title, isOpen, onClose
         </div>
         
         {/* Content */}
-        <div className="flex-1 overflow-hidden relative">
+        <div className="flex-1 overflow-hidden relative bg-white dark:bg-slate-900">
           {children}
         </div>
         
         {/* Footer / Status */}
-        <div className="px-6 py-3 border-t border-slate-800 bg-slate-950/50 text-[10px] text-slate-500 flex justify-between items-center font-mono uppercase tracking-widest">
+        <div className="px-6 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 text-[10px] text-slate-500 flex justify-between items-center font-mono uppercase tracking-widest">
            <span>Live Editor Session</span>
            <span className="flex items-center gap-1.5">
              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
