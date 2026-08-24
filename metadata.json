@@ -2,5 +2,5 @@
   "name": "WP API Architect",
   "description": "Visual designer for WordPress REST APIs: Create Custom Post Types, Taxonomies, and Custom Endpoint Routes mapped to PHP actions and hooks.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -62,6 +62,15 @@ export interface StorageMapping {
   fieldMapping: Record<string, string>;
 }
 
+export interface EndpointMiddleware {
+  id: string;
+  name: string;
+  type: 'auth' | 'permission' | 'rate_limit' | 'custom';
+  enabled: boolean;
+  callbackSnippet: string;
+  description?: string;
+}
+
 export interface CustomEndpoint {
   id: string;
   route: string;
@@ -72,20 +81,29 @@ export interface CustomEndpoint {
   hookName?: string;
   storage?: StorageMapping;
   customPhp?: string;
+  middlewares?: EndpointMiddleware[];
   ui?: { x: number; y: number };
 }
+
+export type GlobalLogicType = 'function' | 'action' | 'filter' | 'middleware' | 'class';
 
 export interface GlobalHelper {
   id: string;
   name: string;
+  type?: GlobalLogicType;
+  hookName?: string;
+  priority?: number;
+  acceptedArgs?: number;
   parameters: string; // Comma separated string for simplicity in UI
   phpCode: string;
   description: string;
+  enabled?: boolean;
 }
 
 export interface ProjectState {
   name: string;
   namespace: string;
+  apiVersion?: string;
   postTypes: CustomPostType[];
   taxonomies: Taxonomy[];
   customEndpoints: CustomEndpoint[];
@@ -113,6 +131,7 @@ export interface AppSettings {
   apiKey: string;
   model: string;
   temperature: number;
+  customPrompt?: string;
 }
 
 export type LogLevel = 'info' | 'success' | 'warning' | 'error';

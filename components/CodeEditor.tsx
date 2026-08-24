@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { EndpointParameter, CustomPostType, FieldType, GlobalHelper } from '../types';
-import { Code, Copy, Box, Variable, Play, Check, Layers } from 'lucide-react';
+import { Code, Copy, Box, Variable, Play, Check, Layers, Sparkles, BookOpen } from 'lucide-react';
+import { SnippetLibraryModal } from './SnippetLibraryModal';
 import Editor from 'react-simple-code-editor';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-clike';
@@ -15,15 +16,23 @@ interface CodeEditorProps {
   targetCptSlug?: string;
   postTypes: CustomPostType[];
   globalHelpers: GlobalHelper[];
+  scope?: 'callback' | 'middleware' | 'all';
 }
 
-export const CodeEditor: React.FC<CodeEditorProps> = ({ value, onChange, parameters, targetCptSlug, postTypes, globalHelpers }) => {
-  const [copied, setCopied] = React.useState(false);
+export const CodeEditor: React.FC<CodeEditorProps> = ({ 
+  value, 
+  onChange, 
+  parameters, 
+  targetCptSlug, 
+  postTypes, 
+  globalHelpers,
+  scope = 'callback'
+}) => {
+  const [copied, setCopied] = useState(false);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
   const insertSnippet = (snippet: string) => {
-    // Basic insertion at end - in a full IDE we would insert at cursor, 
-    // but simple editor is sufficient here.
-    const newVal = value + (value ? '\n' : '') + snippet;
+    const newVal = value + (value ? '\n\n' : '') + snippet;
     onChange(newVal);
   };
 
@@ -43,7 +52,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ value, onChange, paramet
   const targetCpt = postTypes.find(p => p.slug === targetCptSlug);
 
   return (
-    <div className="flex w-full min-h-[500px] border border-slate-700 rounded-lg overflow-hidden bg-[#1e1e1e]">
+    <div className="flex w-full min-h-[500px] border border-slate-700 rounded-xl overflow-hidden bg-[#1e1e1e] shadow-xl relative">
       {/* Editor Area */}
       <div className="flex-1 flex flex-col relative min-w-0">
         <div className="bg-[#252526] px-4 py-2 border-b border-slate-700 flex justify-between items-center z-10">
@@ -51,9 +60,17 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ value, onChange, paramet
                 <Code size={14} className="text-blue-400" />
                 <span>custom_logic.php</span>
             </div>
-            <div className="flex items-center gap-3">
-                <span className="text-[10px] text-slate-500 uppercase bg-slate-800 px-2 py-0.5 rounded">PHP 7.4+</span>
-                <button onClick={handleCopy} className="text-slate-400 hover:text-white transition-colors">
+            <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setIsLibraryOpen(true)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition-all"
+                  title="Browse full boilerplate snippets library"
+                >
+                  <Sparkles size={13} className="text-amber-300" />
+                  <span>Boilerplate Library</span>
+                </button>
+                <span className="text-[10px] text-slate-500 uppercase bg-slate-800 px-2 py-0.5 rounded font-mono">PHP 7.4+</span>
+                <button onClick={handleCopy} className="text-slate-400 hover:text-white transition-colors p-1" title="Copy code">
                     {copied ? <Check size={14} className="text-green-500"/> : <Copy size={14} />}
                 </button>
             </div>
@@ -215,6 +232,14 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ value, onChange, paramet
 
         </div>
       </div>
+
+      {/* Snippet Library Modal */}
+      <SnippetLibraryModal
+        isOpen={isLibraryOpen}
+        onClose={() => setIsLibraryOpen(false)}
+        onInsert={insertSnippet}
+        scope={scope}
+      />
     </div>
   );
 };

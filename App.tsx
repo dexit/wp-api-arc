@@ -49,9 +49,13 @@ const App = () => {
     return DEFAULT_SETTINGS;
   });
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const savedTheme = localStorage.getItem('wp_api_architect_theme');
+    return (savedTheme === 'light' || savedTheme === 'dark') ? savedTheme : 'light';
+  });
   
   useEffect(() => {
+    localStorage.setItem('wp_api_architect_theme', theme);
     if (theme === 'dark') {
       document.body.classList.add('dark');
       document.body.classList.remove('bg-white', 'text-slate-900');
@@ -82,19 +86,23 @@ const App = () => {
     }));
   };
 
-  const handleAddHelper = () => {
+  const handleAddHelper = (template?: Partial<GlobalHelper>) => {
     const newHelper: GlobalHelper = {
-      id: `helper_${Date.now()}`,
-      name: 'new_function',
-      parameters: '$arg1',
-      description: 'New global utility function',
-      phpCode: '// Your PHP code here'
+      id: `logic_${Date.now()}`,
+      name: template?.name || 'custom_helper_function',
+      type: template?.type || 'function',
+      hookName: template?.hookName || 'init',
+      priority: template?.priority || 10,
+      acceptedArgs: template?.acceptedArgs || 1,
+      parameters: template?.parameters || '$arg1',
+      description: template?.description || 'Custom global logic routine',
+      phpCode: template?.phpCode || '// Custom PHP logic\nreturn true;'
     };
     setProject(prev => ({
       ...prev,
       globalHelpers: [...prev.globalHelpers, newHelper]
     }));
-    logger.success('Added new Global Helper');
+    logger.success(`Added ${newHelper.type?.toUpperCase() || 'LOGIC'}: ${newHelper.name}`);
   };
 
   const handleDeleteHelper = (id: string) => {
@@ -341,6 +349,8 @@ const App = () => {
         return (
            <FlowDesigner 
              project={project} 
+             theme={theme}
+             onToggleTheme={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
              onSelect={handleSelect}
              onDelete={(type, id) => {
                if (type === 'postType') handleDeleteResource(id);
@@ -360,7 +370,7 @@ const App = () => {
       case 'blueprint':
         return <BlueprintView project={project} />;
       case 'settings':
-        return <SettingsScreen settings={settings} onSave={setSettings} project={project} setProject={setProject} />;
+        return <SettingsScreen settings={settings} onSave={setSettings} project={project} setProject={setProject} theme={theme} />;
       case 'code':
         return (
           <GlobalLogicEditor 
@@ -368,16 +378,17 @@ const App = () => {
             onUpdate={handleUpdateHelper}
             onAdd={handleAddHelper}
             onDelete={handleDeleteHelper}
+            theme={theme}
           />
         );
       default:
         return (
-          <div className="flex flex-col items-center justify-center h-full text-zinc-500">
-             <div className="p-8 bg-zinc-900/50 rounded-full mb-4">
-               <LayoutTemplate size={48} className="text-zinc-700" />
+          <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-zinc-500">
+             <div className="p-8 bg-slate-100 dark:bg-zinc-900/50 rounded-full mb-4">
+               <LayoutTemplate size={48} className="text-slate-400 dark:text-zinc-700" />
              </div>
-             <p className="text-lg font-medium mb-2">Welcome to WP API Architect</p>
-             <p className="text-sm">Quick editing is available via sidebar or visual designers.</p>
+             <p className="text-lg font-medium mb-2 text-slate-800 dark:text-zinc-200">Welcome to WP API Architect</p>
+             <p className="text-sm text-slate-500 dark:text-zinc-400">Quick editing is available via sidebar or visual designers.</p>
           </div>
         );
     }
@@ -388,7 +399,9 @@ const App = () => {
   const editingTaxonomy = editingResource?.type === 'taxonomy' ? project.taxonomies.find(t => t.id === editingResource.id) : null;
 
   return (
-    <div className="flex h-screen bg-zinc-950 text-zinc-100 overflow-hidden font-sans selection:bg-indigo-500/30">
+    <div className={`flex h-screen overflow-hidden font-sans selection:bg-indigo-500/30 ${
+      theme === 'light' ? 'bg-slate-50 text-slate-900' : 'bg-zinc-950 text-zinc-100'
+    }`}>
       
       <Sidebar 
         project={project}
@@ -407,8 +420,9 @@ const App = () => {
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#09090b] relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-zinc-950 pointer-events-none opacity-50 z-0"/>
+      <div className={`flex-1 flex flex-col min-w-0 relative ${
+        theme === 'light' ? 'bg-white' : 'bg-[#09090b]'
+      }`}>
         <div className="relative z-10 flex-1 flex flex-col min-h-0">
            {renderMainContent()}
         </div>

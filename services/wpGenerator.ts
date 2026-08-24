@@ -86,18 +86,57 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // =========================================================================
-// 1. GLOBAL HELPERS
+// 1. GLOBAL LOGIC, HOOKS & HELPER MODULES
 // =========================================================================
 `;
 
   if (globalHelpers && globalHelpers.length > 0) {
     globalHelpers.forEach(helper => {
-       php += `/**\n * ${helper.description || helper.name}\n */\n`;
-       php += `if ( ! function_exists( '${helper.name}' ) ) {\n`;
-       php += `\tfunction ${helper.name}( ${helper.parameters} ) {\n`;
-       // Indent each line by 2 tabs
-       php += helper.phpCode.split('\n').map(line => `\t\t${line.trimLeft()}`).join('\n') + '\n';
-       php += `\t}\n}\n\n`;
+       const type = helper.type || 'function';
+       const priority = helper.priority ?? 10;
+       const acceptedArgs = helper.acceptedArgs ?? 1;
+       const hookName = helper.hookName || 'init';
+       const paramList = helper.parameters || '';
+
+       if (type === 'action') {
+         php += `/**\n * [Action Hook] ${hookName} -> ${helper.name}\n * ${helper.description || 'Custom Action Hook'}\n */\n`;
+         php += `add_action( '${hookName}', '${helper.name}', ${priority}, ${acceptedArgs} );\n`;
+         php += `if ( ! function_exists( '${helper.name}' ) ) {\n`;
+         php += `\tfunction ${helper.name}( ${paramList} ) {\n`;
+         php += helper.phpCode.split('\n').map(line => `\t\t${line.trimStart()}`).join('\n') + '\n';
+         php += `\t}\n}\n\n`;
+       } else if (type === 'filter') {
+         php += `/**\n * [Filter Hook] ${hookName} -> ${helper.name}\n * ${helper.description || 'Custom Filter Hook'}\n */\n`;
+         php += `add_filter( '${hookName}', '${helper.name}', ${priority}, ${acceptedArgs} );\n`;
+         php += `if ( ! function_exists( '${helper.name}' ) ) {\n`;
+         php += `\tfunction ${helper.name}( ${paramList} ) {\n`;
+         php += helper.phpCode.split('\n').map(line => `\t\t${line.trimStart()}`).join('\n') + '\n';
+         php += `\t}\n}\n\n`;
+       } else if (type === 'middleware') {
+         php += `/**\n * [REST API Pre-Dispatch Middleware] ${helper.name}\n * ${helper.description || 'Global REST Middleware'}\n */\n`;
+         php += `add_filter( 'rest_pre_dispatch', '${helper.name}', ${priority}, 3 );\n`;
+         php += `if ( ! function_exists( '${helper.name}' ) ) {\n`;
+         php += `\tfunction ${helper.name}( $result, $server, $request ) {\n`;
+         php += helper.phpCode.split('\n').map(line => `\t\t${line.trimStart()}`).join('\n') + '\n';
+         php += `\t}\n}\n\n`;
+       } else if (type === 'class') {
+         php += `/**\n * [OOP Module Class] ${helper.name}\n * ${helper.description || 'Modern OOP Module'}\n */\n`;
+         php += `if ( ! class_exists( '${helper.name}' ) ) {\n`;
+         php += `\tclass ${helper.name} {\n`;
+         php += helper.phpCode.split('\n').map(line => `\t\t${line.trimStart()}`).join('\n') + '\n';
+         php += `\t}\n`;
+         php += `\tif ( method_exists( '${helper.name}', 'init' ) ) {\n`;
+         php += `\t\t${helper.name}::init();\n`;
+         php += `\t}\n`;
+         php += `}\n\n`;
+       } else {
+         // Standard helper function
+         php += `/**\n * [Helper Function] ${helper.name}\n * ${helper.description || helper.name}\n */\n`;
+         php += `if ( ! function_exists( '${helper.name}' ) ) {\n`;
+         php += `\tfunction ${helper.name}( ${paramList} ) {\n`;
+         php += helper.phpCode.split('\n').map(line => `\t\t${line.trimStart()}`).join('\n') + '\n';
+         php += `\t}\n}\n\n`;
+       }
     });
   }
 
@@ -178,6 +217,9 @@ function ${projectSlug}_register_content() {
   // =========================================================================
 
   if (customEndpoints.length > 0) {
+    const apiVer = project.apiVersion || 'v1';
+    const fullNamespace = `${namespace}/${apiVer}`;
+
     php += `add_action( 'rest_api_init', '${projectSlug}_register_routes' );\n\n`;
     php += `function ${projectSlug}_register_routes() {\n`;
     
@@ -185,7 +227,7 @@ function ${projectSlug}_register_content() {
       const cleanRoute = endpoint.route.startsWith('/') ? endpoint.route : '/' + endpoint.route;
 
       php += `
-\tregister_rest_route( '${namespace}', '${cleanRoute}', array(
+\tregister_rest_route( '${fullNamespace}', '${cleanRoute}', array(
 \t\t'methods' => '${endpoint.method}',
 \t\t'callback' => '${endpoint.callbackFunction}',
 \t\t'permission_callback' => '__return_true', 
@@ -206,6 +248,19 @@ ${endpoint.parameters.map(param => `\t\t\t'${param.key}' => array(
     customEndpoints.forEach(endpoint => {
       php += `/**\n * Handler for ${endpoint.method} ${endpoint.route}\n */\n`;
       php += `function ${endpoint.callbackFunction}( $request ) {\n`;
+
+      // 0. Middleware Routines
+      if (endpoint.middlewares && endpoint.middlewares.length > 0) {
+        const activeMws = endpoint.middlewares.filter(m => m.enabled);
+        if (activeMws.length > 0) {
+          php += `\t// 0. Middleware Pre-Callback Checks\n`;
+          activeMws.forEach(mw => {
+            php += `\t// Middleware: ${mw.name}\n`;
+            php += mw.callbackSnippet.split('\n').map(line => `\t${line}`).join('\n') + '\n\n';
+          });
+        }
+      }
+
       php += `\t// 1. Parse Parameters\n`;
       endpoint.parameters.forEach(param => {
         php += `\t$${param.key} = $request->get_param( '${param.key}' );\n`;
@@ -487,8 +542,9 @@ export const generateOpenAPI = (project: ProjectState): string => {
   });
 
   // 2. Custom Endpoint Paths
+  const apiVer = project.apiVersion || 'v1';
   project.customEndpoints.forEach(endpoint => {
-    const route = `/${project.namespace}${endpoint.route.startsWith('/') ? endpoint.route : '/' + endpoint.route}`;
+    const route = `/${project.namespace}/${apiVer}${endpoint.route.startsWith('/') ? endpoint.route : '/' + endpoint.route}`;
     
     // Initialize path if not exists
     if (!paths[route]) {

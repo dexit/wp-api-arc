@@ -16,7 +16,8 @@ export const DEFAULT_SUPPORTS_OPTIONS = [
 
 export const INITIAL_PROJECT_STATE: ProjectState = {
   name: 'Corporate HQ Portal',
-  namespace: 'v1',
+  namespace: 'corporate',
+  apiVersion: 'v1',
   globalHelpers: [
     {
       id: 'helper_1',

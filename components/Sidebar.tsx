@@ -52,7 +52,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   
   const SectionHeader: React.FC<{ label: string }> = ({ label }) => (
-    <div className={`px-4 mt-6 mb-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest ${isCollapsed ? 'hidden' : 'block'}`}>{label}</div>
+    <div className={`px-4 mt-6 mb-2 text-[10px] font-bold text-slate-500 dark:text-zinc-500 uppercase tracking-widest ${isCollapsed ? 'hidden' : 'block'}`}>{label}</div>
   );
 
   const NavItem: React.FC<{ 
@@ -73,15 +73,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
       title={label}
       className={`text-left py-1.5 mx-2 rounded-md flex items-center justify-center transition-all group ${
         active 
-          ? 'bg-zinc-800 text-white shadow-sm' 
-          : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
+          ? 'bg-slate-200 dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm font-semibold' 
+          : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-200/60 dark:hover:bg-zinc-900 hover:text-slate-900 dark:hover:text-zinc-200'
       } ${isCollapsed ? 'w-10 px-0' : 'w-[calc(100%-16px)] px-3 gap-3'}`}
     >
-      <Icon size={16} className={`${active ? 'text-indigo-400' : 'text-zinc-500 group-hover:text-zinc-400 shrink-0'}`} />
+      <Icon size={16} className={`${active ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-400 shrink-0'}`} />
       {!isCollapsed && (
         <div className="flex flex-col leading-none overflow-hidden text-ellipsis whitespace-nowrap">
-          <span className="text-sm font-medium truncate">{label}</span>
-          {subLabel && <span className="text-[10px] text-zinc-500 mt-0.5 font-mono truncate">{subLabel}</span>}
+          <span className="text-sm truncate">{label}</span>
+          {subLabel && <span className="text-[10px] text-slate-500 dark:text-zinc-500 mt-0.5 font-mono truncate">{subLabel}</span>}
         </div>
       )}
     </button>
@@ -92,7 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return (
       <button 
         onClick={onClick}
-        className="ml-4 mt-1 text-xs text-zinc-500 hover:text-indigo-400 flex items-center gap-1.5 transition-colors px-2 py-1 rounded hover:bg-zinc-900 w-fit"
+        className="ml-4 mt-1 text-xs text-slate-500 dark:text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-1.5 transition-colors px-2 py-1 rounded hover:bg-slate-200 dark:hover:bg-zinc-900 w-fit"
       >
         <Plus size={12} /> {label}
       </button>
@@ -100,22 +100,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <div className={`${isCollapsed ? 'w-16' : 'w-64'} bg-[#121214] flex flex-col border-r border-zinc-800 h-full transition-all duration-300 ease-in-out`}>
+    <div className={`${isCollapsed ? 'w-16' : 'w-64'} bg-slate-50 dark:bg-[#121214] text-slate-900 dark:text-white flex flex-col border-r border-slate-200 dark:border-zinc-800 h-full transition-all duration-300 ease-in-out`}>
       {/* Brand Header */}
-      <div className="h-14 flex items-center justify-between px-3 border-b border-zinc-800/50">
+      <div className="h-14 flex items-center justify-between px-3 border-b border-slate-200 dark:border-zinc-800/50">
         <div className="flex items-center">
             <div className={`w-6 h-6 bg-indigo-600 rounded flex items-center justify-center shadow-lg shadow-indigo-500/20 ${isCollapsed ? '' : 'mr-3'}`}>
             <Zap size={14} className="text-white fill-white" />
             </div>
-            {!isCollapsed && <span className="font-bold text-sm tracking-wide text-zinc-100 whitespace-nowrap">API Architect</span>}
+            {!isCollapsed && <span className="font-bold text-sm tracking-wide text-slate-900 dark:text-zinc-100 whitespace-nowrap">API Architect</span>}
         </div>
         {!isCollapsed && (
-            <button onClick={() => setIsCollapsed(true)} className="text-zinc-500 hover:text-white p-1">
+            <button onClick={() => setIsCollapsed(true)} className="text-slate-500 dark:text-zinc-500 hover:text-slate-900 dark:hover:text-white p-1">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             </button>
         )}
         {isCollapsed && (
-            <button onClick={() => setIsCollapsed(false)} className="absolute left-14 z-50 bg-zinc-800 text-zinc-400 border border-zinc-700 hover:text-white rounded-r p-1">
+            <button onClick={() => setIsCollapsed(false)} className="absolute left-14 z-50 bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-400 border border-slate-300 dark:border-zinc-700 hover:text-slate-900 dark:hover:text-white rounded-r p-1">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
             </button>
         )}
