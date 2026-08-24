@@ -399,53 +399,142 @@ const GlobalHelperNode = React.memo(({ id, data, x, y, onDragStart, onSelect, on
     );
 });
 
-const Minimap = React.memo(({ nodes, viewport, isLight }: any) => {
+const Minimap = React.memo(({ nodes, viewport, setViewport, containerRef, project, isLight }: any) => {
     const bounds = useMemo(() => {
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        if (Object.keys(nodes).length === 0) return { x: 0, y: 0, w: 100, h: 100 };
-        Object.values(nodes).forEach((n: any) => {
+        const entries = Object.values(nodes);
+        if (entries.length === 0) return { x: 0, y: 0, w: 1200, h: 800 };
+        entries.forEach((n: any) => {
             minX = Math.min(minX, n.x);
             minY = Math.min(minY, n.y);
             maxX = Math.max(maxX, n.x + 280);
             maxY = Math.max(maxY, n.y + 200);
         });
-        return { x: minX - 100, y: minY - 100, w: (maxX - minX) + 200, h: (maxY - minY) + 200 };
+        const padX = 200;
+        const padY = 200;
+        return { 
+          x: minX - padX, 
+          y: minY - padY, 
+          w: Math.max((maxX - minX) + padX * 2, 800), 
+          h: Math.max((maxY - minY) + padY * 2, 600) 
+        };
     }, [nodes]);
 
-    const MM_WIDTH = 160;
-    const MM_HEIGHT = 100;
+    const MM_WIDTH = 180;
+    const MM_HEIGHT = 110;
     
     const mapX = (x: number) => ((x - bounds.x) / bounds.w) * MM_WIDTH;
     const mapY = (y: number) => ((y - bounds.y) / bounds.h) * MM_HEIGHT;
 
-    const vpW = 1000 / viewport.scale;
-    const vpH = 800 / viewport.scale;
+    const containerW = containerRef?.current?.clientWidth || 1000;
+    const containerH = containerRef?.current?.clientHeight || 800;
+
+    const vpW = containerW / viewport.scale;
+    const vpH = containerH / viewport.scale;
     const vpX = -viewport.x / viewport.scale;
     const vpY = -viewport.y / viewport.scale;
 
+    const minimapRef = useRef<HTMLDivElement>(null);
+    const [isDraggingMinimap, setIsDraggingMinimap] = useState(false);
+
+    const handleMinimapInteraction = useCallback((clientX: number, clientY: number) => {
+      if (!minimapRef.current) return;
+      const rect = minimapRef.current.getBoundingClientRect();
+      const clickX = Math.max(0, Math.min(MM_WIDTH, clientX - rect.left));
+      const clickY = Math.max(0, Math.min(MM_HEIGHT, clientY - rect.top));
+
+      // Calculate world coordinates from minimap
+      const worldX = bounds.x + (clickX / MM_WIDTH) * bounds.w;
+      const worldY = bounds.y + (clickY / MM_HEIGHT) * bounds.h;
+
+      // Center the viewport on this world position
+      const newVpX = (containerW / 2) - (worldX * viewport.scale);
+      const newVpY = (containerH / 2) - (worldY * viewport.scale);
+
+      setViewport((prev: any) => ({ ...prev, x: newVpX, y: newVpY }));
+    }, [bounds, containerW, containerH, viewport.scale, setViewport]);
+
+    const onMouseDownMinimap = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      setIsDraggingMinimap(true);
+      handleMinimapInteraction(e.clientX, e.clientY);
+    };
+
+    useEffect(() => {
+      if (!isDraggingMinimap) return;
+
+      const onGlobalMouseMove = (e: MouseEvent) => {
+        handleMinimapInteraction(e.clientX, e.clientY);
+      };
+
+      const onGlobalMouseUp = () => {
+        setIsDraggingMinimap(false);
+      };
+
+      window.addEventListener('mousemove', onGlobalMouseMove);
+      window.addEventListener('mouseup', onGlobalMouseUp);
+
+      return () => {
+        window.removeEventListener('mousemove', onGlobalMouseMove);
+        window.removeEventListener('mouseup', onGlobalMouseUp);
+      };
+    }, [isDraggingMinimap, handleMinimapInteraction]);
+
+    // Color map for node types
+    const cptIds = useMemo(() => new Set((project?.postTypes || []).map((p: any) => p.id)), [project?.postTypes]);
+    const endpointIds = useMemo(() => new Set((project?.customEndpoints || []).map((e: any) => e.id)), [project?.customEndpoints]);
+    const taxIds = useMemo(() => new Set((project?.taxonomies || []).map((t: any) => t.id)), [project?.taxonomies]);
+
     return (
-        <div className={`absolute bottom-6 right-6 w-[160px] h-[100px] border rounded-xl shadow-xl overflow-hidden opacity-80 hover:opacity-100 transition-opacity z-50 pointer-events-none ${
-            isLight ? 'bg-white/90 border-slate-300 shadow-slate-200' : 'bg-zinc-900/90 border-zinc-700'
-        }`}>
-            {Object.entries(nodes).map(([id, pos]: any) => (
-                <div 
-                    key={id}
-                    className={`absolute rounded-sm ${isLight ? 'bg-slate-300' : 'bg-zinc-600'}`}
-                    style={{
-                        left: mapX(pos.x),
-                        top: mapY(pos.y),
-                        width: Math.max((280 / bounds.w) * MM_WIDTH, 6),
-                        height: Math.max((100 / bounds.h) * MM_HEIGHT, 4),
-                    }}
-                />
-            ))}
+        <div 
+            ref={minimapRef}
+            onMouseDown={onMouseDownMinimap}
+            className={`absolute bottom-6 right-6 w-[180px] h-[110px] border rounded-xl shadow-2xl overflow-hidden z-50 cursor-crosshair select-none transition-all group backdrop-blur ${
+                isLight ? 'bg-white/90 border-slate-300 shadow-slate-300/60' : 'bg-zinc-950/90 border-zinc-700 shadow-black/80'
+            }`}
+            title="Interactive Minimap: Click or drag to pan canvas"
+        >
+            <div className={`absolute top-1 left-2 text-[9px] font-bold uppercase tracking-wider pointer-events-none z-10 ${
+              isLight ? 'text-slate-400' : 'text-zinc-500'
+            }`}>
+              Radar
+            </div>
+
+            {/* Nodes representation */}
+            {Object.entries(nodes).map(([id, pos]: any) => {
+                let nodeColor = isLight ? 'bg-slate-400' : 'bg-zinc-600';
+                if (cptIds.has(id)) nodeColor = 'bg-blue-500';
+                else if (endpointIds.has(id)) nodeColor = 'bg-emerald-500';
+                else if (taxIds.has(id)) nodeColor = 'bg-amber-500';
+                else nodeColor = 'bg-purple-500';
+
+                return (
+                  <div 
+                      key={id}
+                      className={`absolute rounded-sm ${nodeColor} opacity-75 shadow-xs`}
+                      style={{
+                          left: Math.max(0, Math.min(MM_WIDTH - 6, mapX(pos.x))),
+                          top: Math.max(0, Math.min(MM_HEIGHT - 4, mapY(pos.y))),
+                          width: Math.max((280 / bounds.w) * MM_WIDTH, 7),
+                          height: Math.max((120 / bounds.h) * MM_HEIGHT, 5),
+                      }}
+                  />
+                );
+            })}
+
+            {/* Viewport Box */}
             <div 
-                className={`absolute border-2 ${isLight ? 'border-indigo-600 bg-indigo-500/20' : 'border-indigo-500 bg-indigo-500/10'}`}
+                className={`absolute border-2 rounded pointer-events-none transition-transform duration-75 ${
+                  isLight 
+                    ? 'border-indigo-600 bg-indigo-500/20 shadow-sm shadow-indigo-300' 
+                    : 'border-indigo-400 bg-indigo-500/25 shadow-sm shadow-indigo-950'
+                }`}
                 style={{
-                    left: mapX(vpX),
-                    top: mapY(vpY),
-                    width: (vpW / bounds.w) * MM_WIDTH,
-                    height: (vpH / bounds.h) * MM_HEIGHT,
+                    left: Math.max(-10, Math.min(MM_WIDTH, mapX(vpX))),
+                    top: Math.max(-10, Math.min(MM_HEIGHT, mapY(vpY))),
+                    width: Math.max(16, (vpW / bounds.w) * MM_WIDTH),
+                    height: Math.max(12, (vpH / bounds.h) * MM_HEIGHT),
                 }}
             />
         </div>
@@ -1132,7 +1221,14 @@ export const FlowDesigner: React.FC<FlowDesignerProps> = ({
           </button>
        </div>
 
-       <Minimap nodes={nodePositions} viewport={viewport} isLight={isLight} />
+       <Minimap 
+         nodes={nodePositions} 
+         viewport={viewport} 
+         setViewport={setViewport} 
+         containerRef={containerRef} 
+         project={project} 
+         isLight={isLight} 
+       />
 
        {/* Context Menu */}
        {contextMenu.visible && (

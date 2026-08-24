@@ -48,12 +48,30 @@ export interface CustomPostType {
 
 export type EndpointMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 
+export type EndpointParamType = 
+  | 'string'
+  | 'integer'
+  | 'number'
+  | 'boolean'
+  | 'object'
+  | 'array'
+  | 'email'
+  | 'url'
+  | 'date-time'
+  | 'enum'
+  | 'file';
+
 export interface EndpointParameter {
   id: string;
   key: string;
   required: boolean;
   type: string;
   description: string;
+  default?: any;
+  enumOptions?: string[]; // Allowed enum values
+  schemaProperties?: EndpointParameter[]; // Sub-fields if type is object/array
+  sanitizeCallback?: string; // e.g. sanitize_text_field, absint, sanitize_email
+  validateCallback?: string; // e.g. rest_validate_request_arg, is_email
 }
 
 export interface StorageMapping {

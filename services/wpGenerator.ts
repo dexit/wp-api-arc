@@ -226,17 +226,50 @@ function ${projectSlug}_register_content() {
     customEndpoints.forEach(endpoint => {
       const cleanRoute = endpoint.route.startsWith('/') ? endpoint.route : '/' + endpoint.route;
 
+      const formatArg = (param: any, indent: string = '\t\t\t') => {
+        let argCode = `${indent}'${param.key}' => array(\n`;
+        argCode += `${indent}\t'required' => ${param.required ? 'true' : 'false'},\n`;
+        argCode += `${indent}\t'type' => '${param.type === 'email' || param.type === 'url' || param.type === 'date-time' || param.type === 'file' ? 'string' : param.type}',\n`;
+        argCode += `${indent}\t'description' => '${param.description.replace(/'/g, "\\'")}',\n`;
+        
+        if (param.type === 'integer') {
+          argCode += `${indent}\t'sanitize_callback' => 'absint',\n`;
+          argCode += `${indent}\t'validate_callback' => 'is_numeric',\n`;
+        } else if (param.type === 'number') {
+          argCode += `${indent}\t'sanitize_callback' => 'floatval',\n`;
+          argCode += `${indent}\t'validate_callback' => 'is_numeric',\n`;
+        } else if (param.type === 'boolean') {
+          argCode += `${indent}\t'sanitize_callback' => 'rest_sanitize_boolean',\n`;
+        } else if (param.type === 'email') {
+          argCode += `${indent}\t'sanitize_callback' => 'sanitize_email',\n`;
+          argCode += `${indent}\t'validate_callback' => 'is_email',\n`;
+        } else if (param.type === 'url') {
+          argCode += `${indent}\t'sanitize_callback' => 'esc_url_raw',\n`;
+        } else if (param.type === 'enum' && param.enumOptions && param.enumOptions.length > 0) {
+          const enumVals = param.enumOptions.map((o: string) => `'${o.trim().replace(/'/g, "\\'")}'`).join(', ');
+          argCode += `${indent}\t'enum' => array( ${enumVals} ),\n`;
+        } else if (param.type === 'object' && param.schemaProperties && param.schemaProperties.length > 0) {
+          argCode += `${indent}\t'type' => 'object',\n`;
+          argCode += `${indent}\t'properties' => array(\n`;
+          param.schemaProperties.forEach((sub: any) => {
+            argCode += `${indent}\t\t'${sub.key}' => array( 'type' => '${sub.type}' ),\n`;
+          });
+          argCode += `${indent}\t),\n`;
+        } else {
+          argCode += `${indent}\t'sanitize_callback' => 'sanitize_text_field',\n`;
+        }
+
+        argCode += `${indent}),`;
+        return argCode;
+      };
+
       php += `
 \tregister_rest_route( '${fullNamespace}', '${cleanRoute}', array(
 \t\t'methods' => '${endpoint.method}',
 \t\t'callback' => '${endpoint.callbackFunction}',
 \t\t'permission_callback' => '__return_true', 
 \t\t'args' => array(
-${endpoint.parameters.map(param => `\t\t\t'${param.key}' => array(
-\t\t\t\t'required' => ${param.required ? 'true' : 'false'},
-\t\t\t\t'type' => '${param.type}',
-\t\t\t\t'description' => '${param.description.replace(/'/g, "\\'")}',
-\t\t\t),`).join('\n')}
+${endpoint.parameters.map(param => formatArg(param)).join('\n')}
 \t\t),
 \t) );
 `;
